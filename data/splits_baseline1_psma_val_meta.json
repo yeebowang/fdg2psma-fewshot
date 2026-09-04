@@ -1,0 +1,7 @@
+{
+  "name": "iclr2026_baseline1_psma_val_monitor",
+  "source": "/media/ybwang/data1/PSMA-CTRL/ICLR2026/data/splits_stratified_70_10_20.json",
+  "filter": "tracer=PSMA (case id startswith psma_) from stratified val",
+  "n_val": 59,
+  "note": "monitor-only from epoch>=TASK1_PSMA_VAL_FROM_EPOCH; does not affect FDG best"
+}

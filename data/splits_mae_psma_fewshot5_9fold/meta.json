@@ -1,0 +1,109 @@
+{
+  "name": "iclr2026_mae_psma_fewshot50_9fold_cover",
+  "n_shot": 5,
+  "n_folds": 9,
+  "seed": 42,
+  "quota_target": {
+    "small": 3,
+    "large": 1,
+    "negative": 1
+  },
+  "n_train_pool": 421,
+  "n_val": 59,
+  "union_size": 45,
+  "covers_all_train70": false,
+  "overlap_slots": -376,
+  "folds": [
+    {
+      "fold": 0,
+      "n_train": 5,
+      "roles": {
+        "small": 5,
+        "large": 0,
+        "negative": 0
+      },
+      "path": "/media/ybwang/data1/PSMA-CTRL/ICLR2026/data/splits_mae_psma_fewshot5_9fold/fold0_nnunet.json"
+    },
+    {
+      "fold": 1,
+      "n_train": 5,
+      "roles": {
+        "small": 5,
+        "large": 0,
+        "negative": 0
+      },
+      "path": "/media/ybwang/data1/PSMA-CTRL/ICLR2026/data/splits_mae_psma_fewshot5_9fold/fold1_nnunet.json"
+    },
+    {
+      "fold": 2,
+      "n_train": 5,
+      "roles": {
+        "small": 5,
+        "large": 0,
+        "negative": 0
+      },
+      "path": "/media/ybwang/data1/PSMA-CTRL/ICLR2026/data/splits_mae_psma_fewshot5_9fold/fold2_nnunet.json"
+    },
+    {
+      "fold": 3,
+      "n_train": 5,
+      "roles": {
+        "small": 5,
+        "large": 0,
+        "negative": 0
+      },
+      "path": "/media/ybwang/data1/PSMA-CTRL/ICLR2026/data/splits_mae_psma_fewshot5_9fold/fold3_nnunet.json"
+    },
+    {
+      "fold": 4,
+      "n_train": 5,
+      "roles": {
+        "small": 5,
+        "large": 0,
+        "negative": 0
+      },
+      "path": "/media/ybwang/data1/PSMA-CTRL/ICLR2026/data/splits_mae_psma_fewshot5_9fold/fold4_nnunet.json"
+    },
+    {
+      "fold": 5,
+      "n_train": 5,
+      "roles": {
+        "small": 5,
+        "large": 0,
+        "negative": 0
+      },
+      "path": "/media/ybwang/data1/PSMA-CTRL/ICLR2026/data/splits_mae_psma_fewshot5_9fold/fold5_nnunet.json"
+    },
+    {
+      "fold": 6,
+      "n_train": 5,
+      "roles": {
+        "small": 5,
+        "large": 0,
+        "negative": 0
+      },
+      "path": "/media/ybwang/data1/PSMA-CTRL/ICLR2026/data/splits_mae_psma_fewshot5_9fold/fold6_nnunet.json"
+    },
+    {
+      "fold": 7,
+      "n_train": 5,
+      "roles": {
+        "small": 5,
+        "large": 0,
+        "negative": 0
+      },
+      "path": "/media/ybwang/data1/PSMA-CTRL/ICLR2026/data/splits_mae_psma_fewshot5_9fold/fold7_nnunet.json"
+    },
+    {
+      "fold": 8,
+      "n_train": 5,
+      "roles": {
+        "small": 5,
+        "large": 0,
+        "negative": 0
+      },
+      "path": "/media/ybwang/data1/PSMA-CTRL/ICLR2026/data/splits_mae_psma_fewshot5_9fold/fold8_nnunet.json"
+    }
+  ],
+  "note": "9 folds × 50-shot; phase1 round-robin covers all PSMA 70% train; phase2 top-up to 50 with stratified quota; shared val=PSMA 10% labeled"
+}

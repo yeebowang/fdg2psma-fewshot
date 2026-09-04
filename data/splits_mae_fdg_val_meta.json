@@ -1,0 +1,5 @@
+{
+  "name": "iclr2026_mae_fdg_late_val",
+  "n_val": 101,
+  "note": "FDG val for late dual-val when training on PSMA"
+}

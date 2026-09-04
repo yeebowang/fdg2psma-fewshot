@@ -1,0 +1,8 @@
+{
+  "name": "iclr2026_baseline1_fdg_train_val",
+  "source": "splits_stratified_70_10_20.json",
+  "filter": "tracer=FDG (case id startswith fdg_)",
+  "n_train": 711,
+  "n_val": 101,
+  "note": "nnU-Net splits_final fold0; test held out from stratified JSON not included"
+}

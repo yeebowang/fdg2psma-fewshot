@@ -1,0 +1,17 @@
+{
+  "n_folds": 9,
+  "n_shot": 5,
+  "folds": [
+    "/media/ybwang/data1/PSMA-CTRL/ICLR2026/data/splits_mae_psma_fewshot5_9fold/fold0_nnunet.json",
+    "/media/ybwang/data1/PSMA-CTRL/ICLR2026/data/splits_mae_psma_fewshot5_9fold/fold1_nnunet.json",
+    "/media/ybwang/data1/PSMA-CTRL/ICLR2026/data/splits_mae_psma_fewshot5_9fold/fold2_nnunet.json",
+    "/media/ybwang/data1/PSMA-CTRL/ICLR2026/data/splits_mae_psma_fewshot5_9fold/fold3_nnunet.json",
+    "/media/ybwang/data1/PSMA-CTRL/ICLR2026/data/splits_mae_psma_fewshot5_9fold/fold4_nnunet.json",
+    "/media/ybwang/data1/PSMA-CTRL/ICLR2026/data/splits_mae_psma_fewshot5_9fold/fold5_nnunet.json",
+    "/media/ybwang/data1/PSMA-CTRL/ICLR2026/data/splits_mae_psma_fewshot5_9fold/fold6_nnunet.json",
+    "/media/ybwang/data1/PSMA-CTRL/ICLR2026/data/splits_mae_psma_fewshot5_9fold/fold7_nnunet.json",
+    "/media/ybwang/data1/PSMA-CTRL/ICLR2026/data/splits_mae_psma_fewshot5_9fold/fold8_nnunet.json"
+  ],
+  "meta": "/media/ybwang/data1/PSMA-CTRL/ICLR2026/data/splits_mae_psma_fewshot5_9fold/meta.json",
+  "covers_all_train70": false
+}

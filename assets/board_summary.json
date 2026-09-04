@@ -1,0 +1,773 @@
+{
+  "protocol": "FDG→PSMA fs50 f258; align MAE: full-case · 100ep · best=val Dice · TEST20",
+  "updated_at": "2026-09-04 09:55:35 CST",
+  "updated_note": "README summary · mean Dice/FP/FN only",
+  "metrics": "Dice / FP / FN (%) · Dice excludes empty-GT · FP=FP/Neg · FN=FN/Pos (voxel micro-avg)",
+  "methods": {
+    "proto_retrieval": {
+      "label": "Proto+Retrieval (ECCV'20)",
+      "pretrained": "none (retrieval)",
+      "fdg_pretrain": {
+        "status": "n/a",
+        "train_time": null,
+        "total_epochs": null
+      },
+      "psma_fs50_f258": {
+        "status": "done",
+        "mean": 0.0004756164303794049,
+        "mean_fp": 0.042989862005230715,
+        "mean_fn": 0.8726443497984055,
+        "train_time": null
+      },
+      "psma_fs10_f258": {
+        "status": "done",
+        "mean": 0.0004756164303794049,
+        "mean_fp": 0.042989862005230715,
+        "mean_fn": 0.8726443497984055,
+        "train_time": null
+      },
+      "psma_fs5_f258": {
+        "status": "done",
+        "mean": 0.0004756164303794049,
+        "mean_fp": 0.042989862005230715,
+        "mean_fn": 0.8726443497984055,
+        "train_time": null
+      },
+      "psma_fs0": {
+        "status": "done",
+        "mean": 0.0004756164303794049,
+        "mean_fp": 0.042989862005230715,
+        "mean_fn": 0.8726443497984055,
+        "train_time": null
+      },
+      "psma_fc70": {
+        "status": "done",
+        "mean": 0.0022940570736787467,
+        "mean_fp": 0.17748908202062244,
+        "mean_fn": 0.3532867648765211,
+        "train_time": null
+      },
+      "fdg_test20": {
+        "status": "done",
+        "mean": 0.0004919522871739338,
+        "mean_fp": 0.057461227071267655,
+        "mean_fn": 0.7598515279108845,
+        "train_time": null
+      }
+    },
+    "nnunet_mim": {
+      "label": "nnUNet MIM (Nat.Methods'21)",
+      "pretrained": "PET+CT MIM",
+      "fdg_pretrain": {
+        "status": "done",
+        "train_time": null,
+        "total_epochs": 169
+      },
+      "psma_fs50_f258": {
+        "status": "done",
+        "mean": 0.41565470959988754,
+        "mean_fp": 0.00013067816632336614,
+        "mean_fn": 0.457448842757427,
+        "train_time": null
+      },
+      "psma_fs10_f258": {
+        "status": "done",
+        "mean": 0.3693774655737936,
+        "mean_fp": 4.845565960423257e-05,
+        "mean_fn": 0.7088943526823005,
+        "train_time": null
+      },
+      "psma_fs5_f258": {
+        "status": "done",
+        "mean": 0.3245345554564726,
+        "mean_fp": 4.038096552544569e-05,
+        "mean_fn": 0.7550083076530971,
+        "train_time": null
+      },
+      "psma_fs0": {
+        "status": "done",
+        "mean": 0.19124138830950643,
+        "mean_fp": 0.0007413505872957182,
+        "mean_fn": 0.544966979063737,
+        "train_time": null
+      },
+      "psma_fc70": {
+        "status": "done",
+        "mean": 0.43963165404920057,
+        "mean_fp": 0.00012781959628819947,
+        "mean_fn": 0.42608550144554386,
+        "train_time": null
+      },
+      "fdg_test20": {
+        "status": "done",
+        "mean": 0.6124386823665702,
+        "mean_fp": 3.857081238519026e-05,
+        "mean_fn": 0.38008009748995614,
+        "train_time": null
+      }
+    },
+    "nnunet": {
+      "label": "nnUNet (Nat.Methods'21)",
+      "pretrained": "scratch",
+      "fdg_pretrain": {
+        "status": "done",
+        "train_time": "1h06m",
+        "total_epochs": 169
+      },
+      "psma_fs50_f258": {
+        "status": "done",
+        "mean": 0.3218599858463512,
+        "mean_fp": 0.00024238277284210663,
+        "mean_fn": 0.4019536114982316,
+        "train_time": "40m03s"
+      },
+      "psma_fs10_f258": {
+        "status": "done",
+        "mean": 0.31599471791012473,
+        "mean_fp": 0.00011099988134859483,
+        "mean_fn": 0.5963382405689511,
+        "train_time": "1h13m"
+      },
+      "psma_fs5_f258": {
+        "status": "done",
+        "mean": 0.29139287828731075,
+        "mean_fp": 9.505398905835365e-05,
+        "mean_fn": 0.6677260400241188,
+        "train_time": "1h14m"
+      },
+      "psma_fs0": {
+        "status": "done",
+        "mean": 0.15444956313725097,
+        "mean_fp": 0.001234945032284044,
+        "mean_fn": 0.5640552421270686,
+        "train_time": null
+      },
+      "psma_fc70": {
+        "status": "done",
+        "mean": 0.3296070837859907,
+        "mean_fp": 0.0002104951014435512,
+        "mean_fn": 0.4413116524147972,
+        "train_time": null
+      },
+      "fdg_test20": {
+        "status": "done",
+        "mean": 0.562267448661781,
+        "mean_fp": 7.599760222921051e-05,
+        "mean_fn": 0.36750914544248275,
+        "train_time": null
+      }
+    },
+    "monai_swinvit": {
+      "label": "MONAI SwinViT (CVPR'22)",
+      "pretrained": "Tang SSL",
+      "fdg_pretrain": {
+        "status": "done",
+        "train_time": "4h28m",
+        "total_epochs": 100
+      },
+      "psma_fs50_f258": {
+        "status": "done",
+        "mean": 0.4456311695671371,
+        "mean_fp": 0.00047962153515270997,
+        "mean_fn": 0.45755418966848205,
+        "train_time": "1h09m"
+      },
+      "psma_fs10_f258": {
+        "status": "done",
+        "mean": 0.2937180037649038,
+        "mean_fp": 0.00025033525228697215,
+        "mean_fn": 0.7618921296178746,
+        "train_time": "41m29s"
+      },
+      "psma_fs5_f258": {
+        "status": "done",
+        "mean": 0.2612075933696963,
+        "mean_fp": 0.00027349921028885785,
+        "mean_fn": 0.780039041345854,
+        "train_time": "37m41s"
+      },
+      "psma_fs0": {
+        "status": "done",
+        "mean": 0.15484760986375343,
+        "mean_fp": 0.0032512718189591614,
+        "mean_fn": 0.574062024275971,
+        "train_time": null
+      },
+      "psma_fc70": {
+        "status": "done",
+        "mean": 0.561006365791265,
+        "mean_fp": 0.0004471665824747405,
+        "mean_fn": 0.3612381813902918,
+        "train_time": "5h32m"
+      },
+      "fdg_test20": {
+        "status": "done",
+        "mean": 0.6099891811981797,
+        "mean_fp": 0.00017602599241232559,
+        "mean_fn": 0.3781529797416297,
+        "train_time": null
+      }
+    },
+    "monai_scratch": {
+      "label": "MONAI SwinViT scratch (CVPR'22)",
+      "pretrained": "scratch",
+      "fdg_pretrain": {
+        "status": "done",
+        "train_time": "4h21m",
+        "total_epochs": 100
+      },
+      "psma_fs50_f258": {
+        "status": "done",
+        "mean": 0.46084095748234105,
+        "mean_fp": 0.0005057775896755799,
+        "mean_fn": 0.4302105941179272,
+        "train_time": "1h18m"
+      },
+      "psma_fs10_f258": {
+        "status": "done",
+        "mean": 0.3294412127353199,
+        "mean_fp": 0.0002565901768364378,
+        "mean_fn": 0.7117226653839,
+        "train_time": "43m05s"
+      },
+      "psma_fs5_f258": {
+        "status": "done",
+        "mean": 0.29176305191417234,
+        "mean_fp": 0.00014773429288912285,
+        "mean_fn": 0.7824974106969953,
+        "train_time": "39m35s"
+      },
+      "psma_fs0": {
+        "status": "done",
+        "mean": 0.11479872480372756,
+        "mean_fp": 0.007251334705673371,
+        "mean_fn": 0.508472411653891,
+        "train_time": null
+      },
+      "psma_fc70": {
+        "status": "done",
+        "mean": 0.5754802413974647,
+        "mean_fp": 0.0004752213375825016,
+        "mean_fn": 0.3247666216578285,
+        "train_time": "6h04m"
+      },
+      "fdg_test20": {
+        "status": "done",
+        "mean": 0.6101634947862477,
+        "mean_fp": 0.00018436810159413354,
+        "mean_fn": 0.3430950262335291,
+        "train_time": null
+      }
+    },
+    "dpdnet_dualenc": {
+      "label": "DpDNet dual-enc (MICCAI'25)",
+      "pretrained": "PET+CT dual-enc",
+      "fdg_pretrain": {
+        "status": "done",
+        "train_time": null,
+        "total_epochs": 169
+      },
+      "psma_fs50_f258": {
+        "status": "done",
+        "mean": 0.4500022947400202,
+        "mean_fp": 0.000156014452952766,
+        "mean_fn": 0.36762196195240093,
+        "train_time": null
+      },
+      "psma_fs10_f258": {
+        "status": "done",
+        "mean": 0.41412917507358427,
+        "mean_fp": 9.031438475797071e-05,
+        "mean_fn": 0.558700968866556,
+        "train_time": null
+      },
+      "psma_fs5_f258": {
+        "status": "done",
+        "mean": 0.36248099011300283,
+        "mean_fp": 6.308566882601631e-05,
+        "mean_fn": 0.6473733417095213,
+        "train_time": null
+      },
+      "psma_fs0": {
+        "status": "done",
+        "mean": 0.17690300538799217,
+        "mean_fp": 0.0012392891008231287,
+        "mean_fn": 0.47974589696393044,
+        "train_time": null
+      },
+      "psma_fc70": {
+        "status": "done",
+        "mean": 0.4919168998631874,
+        "mean_fp": 0.00011668109963009975,
+        "mean_fn": 0.3383293250586584,
+        "train_time": null
+      },
+      "fdg_test20": {
+        "status": "done",
+        "mean": 0.638986193034907,
+        "mean_fp": 4.752950726042034e-05,
+        "mean_fn": 0.29041041612915114,
+        "train_time": null
+      }
+    },
+    "dpdnet": {
+      "label": "DpDNet (MICCAI'25)",
+      "pretrained": "scratch",
+      "fdg_pretrain": {
+        "status": "done",
+        "train_time": "2h31m",
+        "total_epochs": 169
+      },
+      "psma_fs50_f258": {
+        "status": "done",
+        "mean": 0.43957262500765737,
+        "mean_fp": 0.00013571251819383077,
+        "mean_fn": 0.3888547571441542,
+        "train_time": "42m38s"
+      },
+      "psma_fs10_f258": {
+        "status": "done",
+        "mean": 0.40750881744539696,
+        "mean_fp": 3.833284466995365e-05,
+        "mean_fn": 0.7456795521806521,
+        "train_time": "52m38s"
+      },
+      "psma_fs5_f258": {
+        "status": "done",
+        "mean": 0.41226042951164943,
+        "mean_fp": 3.869864364932108e-05,
+        "mean_fn": 0.7365922296063504,
+        "train_time": "53m00s"
+      },
+      "psma_fs0": {
+        "status": "done",
+        "mean": 0.16713248443155407,
+        "mean_fp": 0.0011586180863268293,
+        "mean_fn": 0.5022980910515522,
+        "train_time": null
+      },
+      "psma_fc70": {
+        "status": "done",
+        "mean": 0.4403304820519316,
+        "mean_fp": 0.00012377661266616544,
+        "mean_fn": 0.393884134194349,
+        "train_time": null
+      },
+      "fdg_test20": {
+        "status": "done",
+        "mean": 0.6141684192459688,
+        "mean_fp": 3.849909542755797e-05,
+        "mean_fn": 0.39160577383804507,
+        "train_time": null
+      }
+    },
+    "seganypet": {
+      "label": "SegAnyPET (ICCV'25)",
+      "pretrained": "SegAnyPET-Lesion",
+      "fdg_pretrain": {
+        "status": "done",
+        "train_time": "6h54m",
+        "total_epochs": 100
+      },
+      "psma_fs50_f258": {
+        "status": "done",
+        "mean": 0.15644209497101597,
+        "mean_fp": 3.140825719396218e-06,
+        "mean_fn": 0.9774380345977821,
+        "train_time": "32m54s"
+      },
+      "psma_fs10_f258": {
+        "status": "done",
+        "mean": 0.08400318455984368,
+        "mean_fp": 6.348315454022816e-07,
+        "mean_fn": 0.9966797887278929,
+        "train_time": "36m16s"
+      },
+      "psma_fs5_f258": {
+        "status": "done",
+        "mean": 0.08018265016047771,
+        "mean_fp": 2.106497570840034e-06,
+        "mean_fn": 0.9954678742925805,
+        "train_time": "22m31s"
+      },
+      "psma_fs0": {
+        "status": "done",
+        "mean": 0.2598267787849548,
+        "mean_fp": 6.0643657481996685e-05,
+        "mean_fn": 0.905942547113004,
+        "train_time": null
+      },
+      "psma_fc70": {
+        "status": "done",
+        "mean": 0.21969922573087797,
+        "mean_fp": 1.639843370624521e-05,
+        "mean_fn": 0.9537645821602666,
+        "train_time": "7h25m"
+      },
+      "fdg_test20": {
+        "status": "done",
+        "mean": 0.4467984386583705,
+        "mean_fp": 9.699740627336806e-06,
+        "mean_fn": 0.7236982142198961,
+        "train_time": null
+      }
+    },
+    "seganypet_scratch": {
+      "label": "SegAnyPET scratch (ICCV'25)",
+      "pretrained": "scratch",
+      "fdg_pretrain": {
+        "status": "done",
+        "train_time": "7h43m",
+        "total_epochs": 100
+      },
+      "psma_fs50_f258": {
+        "status": "done",
+        "mean": 0.07950492204821469,
+        "mean_fp": 7.404519636827361e-06,
+        "mean_fn": 0.9923954744156449,
+        "train_time": "26m45s"
+      },
+      "psma_fs10_f258": {
+        "status": "done",
+        "mean": 0.036720027032223705,
+        "mean_fp": 1.1401740301422625e-06,
+        "mean_fn": 0.9992675585434064,
+        "train_time": "10m11s"
+      },
+      "psma_fs5_f258": {
+        "status": "done",
+        "mean": 0.030297709762415397,
+        "mean_fp": 6.083121857786425e-06,
+        "mean_fn": 0.9978094612653554,
+        "train_time": "8m08s"
+      },
+      "psma_fs0": {
+        "status": "done",
+        "mean": 0.22125821204744336,
+        "mean_fp": 5.5366170857629685e-05,
+        "mean_fn": 0.933352305969174,
+        "train_time": null
+      },
+      "psma_fc70": {
+        "status": "done",
+        "mean": 0.19161184010592044,
+        "mean_fp": 7.74868632606062e-06,
+        "mean_fn": 0.9728039886506181,
+        "train_time": "7h25m"
+      },
+      "fdg_test20": {
+        "status": "done",
+        "mean": 0.35587060518728586,
+        "mean_fp": 1.2612899363810771e-05,
+        "mean_fn": 0.7661986058383399,
+        "train_time": null
+      }
+    },
+    "mae_swinunetr": {
+      "label": "PET/CT MAE (arXiv'26)",
+      "pretrained": "PET/CT MAE SSL",
+      "fdg_pretrain": {
+        "status": "done",
+        "train_time": "4h23m",
+        "total_epochs": 100
+      },
+      "psma_fs50_f258": {
+        "status": "done",
+        "mean": 0.5301477695021677,
+        "mean_fp": 0.0006028878601217243,
+        "mean_fn": 0.33308232979288227,
+        "train_time": "1h15m"
+      },
+      "psma_fs10_f258": {
+        "status": "done",
+        "mean": 0.39325122528857026,
+        "mean_fp": 0.0003924437606617667,
+        "mean_fn": 0.5704379474908678,
+        "train_time": "41m42s"
+      },
+      "psma_fs5_f258": {
+        "status": "done",
+        "mean": 0.30607178992490114,
+        "mean_fp": 0.00030743812017446456,
+        "mean_fn": 0.7540808286982315,
+        "train_time": "38m00s"
+      },
+      "psma_fs0": {
+        "status": "done",
+        "mean": 0.15982717195287546,
+        "mean_fp": 0.006031186303617976,
+        "mean_fn": 0.31240883436457006,
+        "train_time": null
+      },
+      "psma_fc70": {
+        "status": "done",
+        "mean": 0.6049072081050663,
+        "mean_fp": 0.0005812248813683664,
+        "mean_fn": 0.262253855152893,
+        "train_time": "7h11m"
+      },
+      "fdg_test20": {
+        "status": "done",
+        "mean": 0.7320193707570434,
+        "mean_fp": 0.00012878521444113084,
+        "mean_fn": 0.20616026888214736,
+        "train_time": null
+      }
+    },
+    "mae_scratch": {
+      "label": "PET/CT MAE scratch (arXiv'26)",
+      "pretrained": "scratch",
+      "fdg_pretrain": {
+        "status": "done",
+        "train_time": "4h41m",
+        "total_epochs": 100
+      },
+      "psma_fs50_f258": {
+        "status": "done",
+        "mean": 0.48096128099629376,
+        "mean_fp": 0.0004996245271803322,
+        "mean_fn": 0.4134483494632899,
+        "train_time": "1h16m"
+      },
+      "psma_fs10_f258": {
+        "status": "done",
+        "mean": 0.3822546505416914,
+        "mean_fp": 0.0003327944089666036,
+        "mean_fn": 0.634576868286808,
+        "train_time": "43m31s"
+      },
+      "psma_fs5_f258": {
+        "status": "done",
+        "mean": 0.3115837713432237,
+        "mean_fp": 0.0002832866136098015,
+        "mean_fn": 0.7179370347028712,
+        "train_time": "38m38s"
+      },
+      "psma_fs0": {
+        "status": "done",
+        "mean": 0.15617994331853002,
+        "mean_fp": 0.00502227352592395,
+        "mean_fn": 0.45443452009878954,
+        "train_time": null
+      },
+      "psma_fc70": {
+        "status": "done",
+        "mean": 0.5808267052526828,
+        "mean_fp": 0.000501824963704343,
+        "mean_fn": 0.3200503573484476,
+        "train_time": "6h09m"
+      },
+      "fdg_test20": {
+        "status": "done",
+        "mean": 0.6630133659020067,
+        "mean_fp": 0.0001855469641666341,
+        "mean_fn": 0.2698993305609088,
+        "train_time": null
+      }
+    },
+    "hemingduo_scratch": {
+      "label": "BIRTH scratch (AutoPET V'26)",
+      "pretrained": "scratch",
+      "fdg_pretrain": {
+        "status": "done",
+        "train_time": null,
+        "total_epochs": 169
+      },
+      "psma_fs50_f258": {
+        "status": "running",
+        "mean": null,
+        "mean_fp": 0.00019926172738900382,
+        "mean_fn": 0.4287848271026953,
+        "train_time": null
+      },
+      "psma_fs10_f258": {
+        "status": "done",
+        "mean": 0.3247138867924127,
+        "mean_fp": 6.436946907544376e-05,
+        "mean_fn": 0.6980236294815219,
+        "train_time": null
+      },
+      "psma_fs5_f258": {
+        "status": "done",
+        "mean": 0.2945589152443911,
+        "mean_fp": 4.653343258371856e-05,
+        "mean_fn": 0.7578395460572949,
+        "train_time": null
+      },
+      "psma_fs0": {
+        "status": "pending",
+        "mean": null,
+        "mean_fp": null,
+        "mean_fn": null,
+        "train_time": null
+      },
+      "psma_fc70": {
+        "status": "pending",
+        "mean": null,
+        "mean_fp": null,
+        "mean_fn": null,
+        "train_time": null
+      },
+      "fdg_test20": {
+        "status": "pending",
+        "mean": null,
+        "mean_fp": null,
+        "mean_fn": null,
+        "train_time": null
+      }
+    },
+    "hemingduo": {
+      "label": "BIRTH / hemingduo (AutoPET V'26)",
+      "pretrained": "Dataset619 MultiTalent",
+      "fdg_pretrain": {
+        "status": "pending",
+        "train_time": null,
+        "total_epochs": 169
+      },
+      "psma_fs50_f258": {
+        "status": "pending",
+        "mean": null,
+        "mean_fp": null,
+        "mean_fn": null,
+        "train_time": null
+      },
+      "psma_fs10_f258": {
+        "status": "pending",
+        "mean": null,
+        "mean_fp": null,
+        "mean_fn": null,
+        "train_time": null
+      },
+      "psma_fs5_f258": {
+        "status": "pending",
+        "mean": null,
+        "mean_fp": null,
+        "mean_fn": null,
+        "train_time": null
+      },
+      "psma_fs0": {
+        "status": "pending",
+        "mean": null,
+        "mean_fp": null,
+        "mean_fn": null,
+        "train_time": null
+      },
+      "psma_fc70": {
+        "status": "pending",
+        "mean": null,
+        "mean_fp": null,
+        "mean_fn": null,
+        "train_time": null
+      },
+      "fdg_test20": {
+        "status": "pending",
+        "mean": null,
+        "mean_fp": null,
+        "mean_fn": null,
+        "train_time": null
+      }
+    },
+    "chenyixin_scratch": {
+      "label": "YixinChen scratch (AutoPET V'26)",
+      "pretrained": "scratch",
+      "fdg_pretrain": {
+        "status": "done",
+        "train_time": null,
+        "total_epochs": 169
+      },
+      "psma_fs50_f258": {
+        "status": "done",
+        "mean": 0.3266551216981634,
+        "mean_fp": 0.00021756209641825693,
+        "mean_fn": 0.421971778000618,
+        "train_time": null
+      },
+      "psma_fs10_f258": {
+        "status": "done",
+        "mean": 0.2939469602834958,
+        "mean_fp": 4.540331299828655e-05,
+        "mean_fn": 0.7386983550399016,
+        "train_time": null
+      },
+      "psma_fs5_f258": {
+        "status": "done",
+        "mean": 0.2657081119281534,
+        "mean_fp": 4.100056306371123e-05,
+        "mean_fn": 0.7800855722875747,
+        "train_time": null
+      },
+      "psma_fs0": {
+        "status": "pending",
+        "mean": null,
+        "mean_fp": null,
+        "mean_fn": null,
+        "train_time": null
+      },
+      "psma_fc70": {
+        "status": "pending",
+        "mean": null,
+        "mean_fp": null,
+        "mean_fn": null,
+        "train_time": null
+      },
+      "fdg_test20": {
+        "status": "pending",
+        "mean": null,
+        "mean_fp": null,
+        "mean_fn": null,
+        "train_time": null
+      }
+    },
+    "chenyixin": {
+      "label": "YixinChen / chenyixin (AutoPET V'26)",
+      "pretrained": "Dataset619 MultiTalent",
+      "fdg_pretrain": {
+        "status": "pending",
+        "train_time": null,
+        "total_epochs": 169
+      },
+      "psma_fs50_f258": {
+        "status": "pending",
+        "mean": null,
+        "mean_fp": null,
+        "mean_fn": null,
+        "train_time": null
+      },
+      "psma_fs10_f258": {
+        "status": "pending",
+        "mean": null,
+        "mean_fp": null,
+        "mean_fn": null,
+        "train_time": null
+      },
+      "psma_fs5_f258": {
+        "status": "pending",
+        "mean": null,
+        "mean_fp": null,
+        "mean_fn": null,
+        "train_time": null
+      },
+      "psma_fs0": {
+        "status": "pending",
+        "mean": null,
+        "mean_fp": null,
+        "mean_fn": null,
+        "train_time": null
+      },
+      "psma_fc70": {
+        "status": "pending",
+        "mean": null,
+        "mean_fp": null,
+        "mean_fn": null,
+        "train_time": null
+      },
+      "fdg_test20": {
+        "status": "pending",
+        "mean": null,
+        "mean_fp": null,
+        "mean_fn": null,
+        "train_time": null
+      }
+    }
+  }
+}

@@ -1,0 +1,41 @@
+# Byte-compiled / caches
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+
+# Weights & run artifacts (keep source only)
+*.pth
+*.pt
+*.ckpt
+*.onnx
+**/runs/
+**/nnUNet_results/
+**/nnUNet_preprocessed/
+**/nnUNet_raw/
+
+# Large local blobs
+*.npz
+*.nii
+*.nii.gz
+*.mha
+*.zip
+!docs/iclr-2027-style-files.zip
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Secrets / local env
+.env
+*.pem
+
+# Vendored pip trees
+third_party/seganypet_pip/
+
+*.whl
+third_party/**/*.zip

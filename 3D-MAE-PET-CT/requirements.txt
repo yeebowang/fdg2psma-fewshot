@@ -1,0 +1,16 @@
+# PET-CT 3D MAE env — pin versions so pip 不会把 base 的 torch 2.6+cu118 升级掉
+monai==1.4.0
+SimpleITK
+scipy
+numpy<2.0
+tqdm
+dynamic-network-architectures==0.3.1
+nibabel
+einops
+matplotlib
+jupyter
+ipywidgets
+pandas
+scikit-image
+pyyaml
+timm<1.0.23
