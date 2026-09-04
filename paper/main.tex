@@ -10,8 +10,8 @@
 \usepackage{amsmath}
 \usepackage{xcolor}
 
-\title{From {FDG} to {PSMA}: Few-Shot Lesion Segmentation\\
-and Representation Transfer in Whole-Body {PET}/{CT}}
+\title{Self-Supervised Representation Learning for Rapid Adaptation\\
+under Clinical Concept Drift}
 
 % Keep anonymous for workshop submission drafts.
 \author{
@@ -29,53 +29,56 @@ Paper under double-blind review
 \maketitle
 
 \begin{abstract}
-Whole-body PET/CT lesion segmentation is highly sensitive to tracer chemistry:
-models trained on FDG rarely transfer to PSMA without target labels, yet PSMA
-annotations are scarce in many clinical settings. We study this \emph{tracer-shift}
-problem under a unified aligned protocol that freezes a shared FDG supervised stage
-and varies only the PSMA adaptation budget ($N\in\{50,10,5,0\}$ labeled cases),
-plus a high-label PSMA reference ($70\%$) and an FDG held-out test.
-Across fifteen method variants spanning classical segmentation, self-supervised
-representation learning, promptable PET models, and competition entries, we find that
-representation-learning initializations---in particular PET/CT masked autoencoding---
-retain higher TEST Dice as PSMA labels vanish, while several strong supervised or
-promptable baselines degrade primarily through false negatives on sparse lesions.
-We argue that the long-tailed, domain-conditional statistics of clinical findings
-should shape both pretraining objectives and evaluation (Dice together with
-voxel-level FP/FN), and release code and a mean-metric board for the aligned
-protocol.\footnote{Draft for an ICLR workshop track; numbers are live experimental
-snapshots and will be frozen for the camera-ready.}
+Under clinical concept drift from FDG to PSMA PET/CT, self-supervised pretraining
+on source-domain volumes yields representations that adapt to the target tracer with
+far fewer labeled cases than training from scratch---but this advantage is
+\emph{shot-dependent} and collapses in the extreme low-shot / zero-shot regime unless
+the adaptation protocol is matched to the drift.
+We instantiate this claim with an aligned FDG$\rightarrow$PSMA benchmark that freezes a
+shared FDG stage and varies only the PSMA label budget
+($N\in\{50,10,5,0\}$), reporting Dice together with voxel-level FP/FN.
+Across fifteen method variants, PET/CT MAE SSL leads at moderate budgets
+(\texttt{fs50}/\texttt{fs10}), yet the SSL--scratch gap shrinks to noise by
+\texttt{fs5}/\texttt{fs0}, where competing recipes can overtake---highlighting
+\emph{when} representation learning does and does not buy robustness to clinical
+concept drift.\footnote{ICLR workshop draft; numbers are live board snapshots.}
 \end{abstract}
 
 \section{Introduction}
 \label{sec:intro}
 
-Oncology PET/CT is multimodal and multi-tracer. FDG and PSMA probe overlapping but
-statistically different lesion populations: prevalence, SUV patterns, organ
-background, and negative-study rates all shift with the tracer
-\citep{yixinchen2025hitchhiker}. In practice this yields a representation-learning
-problem that is closer to open-world transfer than to i.i.d.\ fine-tuning: abundant
-(or at least more available) FDG supervision must support PSMA segmentation when
-only a handful of PSMA labels exist.
+We use \emph{clinical concept drift} for tracer change in oncology PET/CT: not only
+covariate shift of images, but a change in what ``lesion'' looks like (uptake
+pattern, organ background) and how labels distribute (size, prevalence,
+empty-GT rate) when moving from FDG to PSMA \citep{yixinchen2025hitchhiker}.
+This differs from classical temporal concept drift; the inducing factor is a
+change of clinical measurement concept (tracer), not calendar time.
 
-Recent medical foundation / SSL models promise transferable features
-\citep{he2022mae,tang2022self,mae_petct_arxiv}, while strong supervised toolkits such as
-nnU-Net remain hard baselines \citep{isensee2021nnu}. Concurrent work on normative
-representation learning further emphasizes that clinical findings are rare,
-heterogeneous, and imperfectly observed, so objectives and metrics tuned only to
-frequent lesions can be misleading \citep{bercea2025normative,bercea2025nova}.
+Self-supervised / foundation-style pretraining promises rapid adaptation when
+target labels are scarce \citep{he2022mae,tang2022self,mae_petct_arxiv}, while
+nnU-Net-style supervised toolkits remain strong baselines \citep{isensee2021nnu}.
+Work on normative representation learning further stresses that clinical findings
+are rare and imperfectly observed, so average metrics on frequent phenotypes can
+mislead \citep{bercea2025normative,bercea2025nova}.
 
-This draft asks a concrete empirical question under matched compute and splits:
-\emph{Given the same FDG supervised stage, which initializations and adaptation
-recipes remain useful when PSMA labels shrink from 50 to 0 cases?}
-Our contributions toward a workshop paper are:
+\paragraph{Core claim.}
+Source-domain SSL can reduce the labeled PSMA budget needed for competitive
+segmentation under FDG$\rightarrow$PSMA drift, but the gain is concentrated at
+\emph{moderate} few-shot budgets and is not automatic at near-zero labels.
+
+\paragraph{Testable sub-claims.}
 \begin{enumerate}
-    \item An \textbf{aligned FDG$\rightarrow$PSMA protocol} with shared FDG training,
-    PSMA few-/zero-shot ladders, and TEST reporting of Dice / FP / FN.
-    \item A \textbf{multi-method board} covering MIM/nnU-Net, Swin SSL, DpDNet,
-    SegAnyPET, PET/CT MAE, retrieval, and AutoPET~V entries.
-    \item An analysis linking \textbf{clinical finding statistics} (tracer shift,
-    label scarcity, FN-dominated failures) to representation objectives and evaluation.
+    \item \textbf{Drift.} Cross-tracer lesion segmentation induces concept drift in
+    lesion appearance and label statistics, beyond covariate shift alone.
+    \item \textbf{Representation helps.} Under a shared FDG$\rightarrow$PSMA protocol,
+    SSL initializations (e.g., MAE/MIM/dual-encoder) improve few-shot PSMA adaptation
+    over scratch at moderate $N$ (here, especially $N{=}50$).
+    \item \textbf{When it fails.} Gains shrink or reverse as labeled PSMA shots
+    decrease; foundation-style or retrieval baselines may fail once the clinical
+    concept has drifted.
+    \item \textbf{Evaluation.} Fair comparison requires an aligned protocol
+    (same FDG stage $\rightarrow$ fs50/10/5/0) and metrics that separately report
+    Dice, FP, and FN under long-tailed empty/positive cases.
 \end{enumerate}
 
 \section{Aligned experimental protocol}
@@ -91,33 +94,27 @@ probes source-domain retention.
 
 \paragraph{Shared FDG stage.}
 Every non-retrieval method first trains (or fine-tunes) on the same FDG supervised
-split with matched global batch size and a common early-stopping / epoch budget
-policy for the board (method-specific defaults are logged). The resulting FDG
-checkpoint initializes PSMA adaptation unless the method is training-free.
+split with matched global batch size and a common epoch budget policy for the board.
+The resulting FDG checkpoint initializes PSMA adaptation unless the method is
+training-free.
 
 \paragraph{PSMA adaptation.}
 Few-shot fine-tuning uses small labeled PSMA sets with online validation and
-TEST evaluation aggregated over nine TEST folds (means reported in the main
-text; per-fold grids omitted). Metrics:
+TEST evaluation aggregated over nine TEST folds (means in the main text; per-fold
+grids omitted). Metrics:
 \[
 \mathrm{Dice}=\frac{2\mathrm{TP}}{2\mathrm{TP}+\mathrm{FP}+\mathrm{FN}},\quad
 \mathrm{FP\%}=\frac{\mathrm{FP}}{\mathrm{Neg}},\quad
 \mathrm{FN\%}=\frac{\mathrm{FN}}{\mathrm{Pos}},
 \]
-with Dice computed excluding empty-GT cases and FP/FN as voxel micro-averages.
-This decomposition matters clinically: under sparse PSMA disease, mean Dice can
-hide near-total miss rates (high FN).
+with Dice excluding empty-GT cases and FP/FN as voxel micro-averages.
 
 \paragraph{Methods.}
-We compare (i) scratch vs.\ pretrained siblings when available;
-(ii) PET/CT MAE SSL \citep{mae_petct_arxiv};
-(iii) Swin transformer SSL \citep{tang2022self};
-(iv) nnU-Net and MIM variants \citep{isensee2021nnu};
-(v) DpDNet dual-encoder / scratch \citep{dpdnet2025};
-(vi) SegAnyPET pretrained / scratch \citep{seganypet2025};
-(vii) prototype retrieval (training-free);
-(viii) AutoPET~V competition codebases (BIRTH / YixinChen), scratch and
-MultiTalent-initialized rows.
+We compare scratch vs.\ pretrained siblings when available: PET/CT MAE SSL
+\citep{mae_petct_arxiv}, Swin SSL \citep{tang2022self}, nnU-Net/MIM
+\citep{isensee2021nnu}, DpDNet \citep{dpdnet2025}, SegAnyPET
+\citep{seganypet2025}, prototype retrieval, and AutoPET~V entries
+(BIRTH / YixinChen).
 
 \section{Results}
 \label{sec:results}
@@ -125,16 +122,14 @@ MultiTalent-initialized rows.
 \begin{figure}[t]
 \centering
 \includegraphics[width=\linewidth]{figures/progress_board.png}
-\caption{Mean TEST board for the aligned protocol (Dice / FP / FN).
-Nine-fold grids, ETA, and queue footers are omitted. Snapshot timestamp is
-embedded in the figure header; incomplete rows remain marked pending/running.}
+\caption{Mean TEST board (Dice / FP / FN). Nine-fold grids, ETA, and queue footers
+omitted. Incomplete rows remain pending/running.}
 \label{fig:board}
 \end{figure}
 
 \begin{table}[t]
-\caption{PSMA/FDG TEST \textbf{Dice (\%)} under the aligned protocol
-(higher is better). ``--'' denotes pending/incomplete runs.
-Bold marks the best completed entry per column among finished rows.}
+\caption{PSMA/FDG TEST \textbf{Dice (\%)}. ``--''~=~pending.
+Bold~=~best completed entry per column.}
 \label{tab:dice}
 \centering
 \scriptsize
@@ -162,83 +157,64 @@ YixinChen & MT619 & -- & -- & -- & -- & -- & -- \\
 \end{tabular}
 \end{table}
 
-\paragraph{Representation pretraining helps under scarcity.}
-On PSMA \texttt{fs50}, PET/CT MAE with SSL initialization leads completed methods
-(53.0 Dice), ahead of its scratch twin (48.1) and of dual-encoder / Swin /
-nnU-Net MIM rows (Table~\ref{tab:dice}, Fig.~\ref{fig:board}). The gap persists at
-\texttt{fs10}. At \texttt{fs5}, DpDNet scratch is competitive on Dice, but MAE SSL
-still pairs stronger FDG TEST retention (73.2), suggesting the SSL features are
-not bought by catastrophic forgetting of the source tracer.
+\paragraph{Moderate few-shot: SSL buys rapid adaptation.}
+At PSMA \texttt{fs50}, PET/CT MAE SSL reaches 53.0 Dice vs.\ 48.1 for its scratch
+twin ($+4.9$\,pp) and leads completed methods (Table~\ref{tab:dice}). The SSL edge
+remains positive but smaller at \texttt{fs10} ($+1.1$\,pp). This supports the
+``rapid adaptation'' half of the claim under a matched FDG stage.
 
-\paragraph{Failure modes are statistically asymmetric.}
-Board FP rates are typically $\ll 1\%$, while FN often exceeds $30$--$70\%$ as
-$N$ decreases---especially for SegAnyPET adaptations that collapse toward
-under-segmentation on PSMA few-shot. This matches the clinical prior that
-missed sparse lesions dominate error under low prevalence, and argues against
-reporting Dice alone.
+\paragraph{Extreme scarcity: the advantage collapses.}
+By \texttt{fs5}, the MAE SSL--scratch gap flips slightly ($-0.6$\,pp), and DpDNet
+scratch leads Dice (41.2). At \texttt{fs0}, most learned segmentors sit in a low
+band ($\sim$11--19); SegAnyPET's higher zero-shot Dice coexists with severe FN on
+few-shot columns. Retrieval does not transfer under this drift. Gains from SSL are
+therefore \emph{shot-dependent}, not unconditional.
 
-\paragraph{Zero-shot is not solved.}
-PSMA \texttt{fs0} remains low for almost all learned segmentors ($\sim$11--19 Dice),
-while SegAnyPET's higher fs0 Dice coexists with very high FN on few-shot columns,
-underscoring that training-free / promptable behavior and few-shot fine-tuning
-can optimize different operating points.
+\paragraph{Failures are FN-dominated.}
+Board FP rates are typically $\ll 1\%$, while FN often exceeds $30$--$70\%$ as $N$
+decreases---Dice alone hides under-segmentation of sparse PSMA disease.
 
-\section{Discussion: clinical statistics $\leftrightarrow$ objectives}
+\section{Discussion}
 \label{sec:discussion}
 
-Three statistical facts about findings in this setting should influence
-representation learning \citep{bercea2025normative}:
-\begin{enumerate}
-    \item \textbf{Tracer-conditional normals.} ``Healthy'' and background uptake are
-    domain-specific; FDG-pretrained features must be judged by PSMA transfer, not
-    only FDG TEST.
-    \item \textbf{Long-tailed lesion burden.} Few-shot and empty-GT rates make
-    purely discriminative objectives brittle; generative / masked objectives that
-    densify anatomical--metabolic structure are a better inductive bias when
-    positives are rare.
-    \item \textbf{Annotation as a noisy observation model.} Overlap metrics against
-    coarse masks can punish conservative segmentors; FP/FN stratification and
-    open-world rare-phenotype tests \citep{bercea2025nova} are necessary complements.
-\end{enumerate}
-We view the aligned board as a stress test of whether a representation was
-learned under assumptions compatible with these statistics.
+Matching objectives to clinical concept drift means: (i)~pretrain for transferable
+anatomical--metabolic structure on the source tracer; (ii)~adapt with a protocol
+whose label budget is stated explicitly; (iii)~evaluate with FP/FN under
+long-tailed empty/positive cases, not only mean Dice
+\citep{bercea2025normative,bercea2025nova}.
+Our board is designed so the core claim is falsifiable: if SSL never helped at
+\texttt{fs50}/\texttt{fs10}, or continued to dominate at \texttt{fs5}/\texttt{fs0},
+the shot-dependent statement would be revised accordingly.
 
 \section{Conclusion}
 \label{sec:conclusion}
 
-We presented a draft aligned benchmark for FDG$\rightarrow$PSMA few-shot lesion
-segmentation. Early evidence favors PET/CT representation pretraining for
-label-scarce PSMA adaptation, while highlighting FN-dominated failures that
-Dice alone conceals. Next revisions will freeze incomplete competition rows,
-add confidence intervals over folds, and tighten citations for concurrent
-PET foundation models.
+Under FDG$\rightarrow$PSMA clinical concept drift, source-domain self-supervised
+representations accelerate PSMA adaptation at moderate few-shot budgets, but the benefit is
+not automatic in the extreme low-/zero-shot regime. Fair, aligned protocols and
+FN-aware metrics are required to locate that boundary. We will freeze incomplete
+competition rows and add fold-wise intervals for the camera-ready.
 
 \subsubsection*{Reproducibility statement}
-Code, split JSONs, and the mean-metric board exporter are available at
+Code, split JSONs, and the mean-metric board exporter:
 \url{https://github.com/yeebowang/fdg2psma-fewshot}.
-Raw PET/CT volumes and checkpoints are not redistributed here; scripts document
-the aligned launchers used to produce Fig.~\ref{fig:board} and Table~\ref{tab:dice}.
+Raw volumes/checkpoints are not redistributed; launchers reproduce
+Fig.~\ref{fig:board} and Table~\ref{tab:dice}.
 
 \subsubsection*{Ethics statement}
-This work uses research PET/CT imaging under existing data-use agreements for
-algorithm development. No identifiable patient information is released in the
-public repository. Clinical deployment would require prospective validation and
-institution-specific governance.
+Research PET/CT under existing data-use agreements; no identifiable patient data
+in the public repo. Clinical use would need prospective validation.
 
 \subsubsection*{AI use statement}
-Large language model tools were used to help edit LaTeX wording and repository
-documentation. Experimental design, training, evaluation, and numerical results
-were produced by the authors' pipelines; the authors verified all reported
-metrics against logged board JSON.
+LLMs assisted with LaTeX editing. Design, training, evaluation, and numbers come
+from the authors' pipelines and were checked against board JSON.
 
 \bibliography{references}
 \bibliographystyle{iclr2027_conference}
 
 \appendix
 \section{Protocol pointers}
-Launchers and board ingestion live under \texttt{run/} and
-\texttt{scripts/iclr2026\_aligned\_fdg\_fs50\_board.py} in the public repository.
-The README figure omits per-fold grids by design; full fold dictionaries remain in
-internal board JSON for auditing.
+See \texttt{run/} and \texttt{scripts/iclr2026\_aligned\_fdg\_fs50\_board.py}.
+Per-fold dictionaries remain in internal board JSON for auditing.
 
 \end{document}
