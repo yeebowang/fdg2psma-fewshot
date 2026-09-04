@@ -38,6 +38,14 @@ python3 scripts/export_readme_board.py \
   --out-md assets/board_table.md
 ```
 
+## Workshop paper draft
+
+ICLR 2027–style LaTeX draft (anonymous): [`paper/`](paper/) (`main.tex`, mean-metric figure, references).
+
+```bash
+cd paper && pdflatex main.tex && bibtex main && pdflatex main.tex && pdflatex main.tex
+```
+
 ## Repository layout
 
 | Path | Contents |
