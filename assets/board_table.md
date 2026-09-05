@@ -1,4 +1,4 @@
-| Method | Pretrained | FDG | PSMA fs50 | PSMA fs10 | PSMA fs5 | PSMA fs0 | PSMA fc70% | FDG TEST |
+| Method | Pretrained | FDG | PSMA fs50<br>Dice / FP / FN | PSMA fs10<br>Dice / FP / FN | PSMA fs5<br>Dice / FP / FN | PSMA fs0<br>Dice / FP / FN | PSMA fc70%<br>Dice / FP / FN | FDG TEST<br>Dice / FP / FN |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | Proto+Retrieval (ECCV'20) | none (retrieval) | N/A | 0.05%<br>4.30%<br>87.26% | 0.05%<br>4.30%<br>87.26% | 0.05%<br>4.30%<br>87.26% | 0.05%<br>4.30%<br>87.26% | 0.23%<br>17.75%<br>35.33% | 0.05%<br>5.75%<br>75.99% |
 | nnUNet MIM (Nat.Methods'21) | PET+CT MIM | DONE<br>169ep | 41.57%<br>0.01%<br>45.74% | 36.94%<br>0.00%<br>70.89% | 32.45%<br>0.00%<br>75.50% | 19.12%<br>0.07%<br>54.50% | 43.96%<br>0.01%<br>42.61% | 61.24%<br>0.00%<br>38.01% |
@@ -11,7 +11,3 @@
 | SegAnyPET scratch (ICCV'25) | scratch | DONE<br>7h43m<br>100ep | 7.95%<br>0.00%<br>99.24% | 3.67%<br>0.00%<br>99.93% | 3.03%<br>0.00%<br>99.78% | 22.13%<br>0.01%<br>93.34% | 19.16%<br>0.00%<br>97.28% | 35.59%<br>0.00%<br>76.62% |
 | PET/CT MAE (arXiv'26) | PET/CT MAE SSL | DONE<br>4h23m<br>100ep | 53.01%<br>0.06%<br>33.31% | 39.33%<br>0.04%<br>57.04% | 30.61%<br>0.03%<br>75.41% | 15.98%<br>0.60%<br>31.24% | 60.49%<br>0.06%<br>26.23% | 73.20%<br>0.01%<br>20.62% |
 | PET/CT MAE scratch (arXiv'26) | scratch | DONE<br>4h41m<br>100ep | 48.10%<br>0.05%<br>41.34% | 38.23%<br>0.03%<br>63.46% | 31.16%<br>0.03%<br>71.79% | 15.62%<br>0.50%<br>45.44% | 58.08%<br>0.05%<br>32.01% | 66.30%<br>0.02%<br>26.99% |
-| BIRTH scratch (AutoPET V'26) | scratch | DONE<br>169ep | RUNNING | 32.47%<br>0.01%<br>69.80% | 29.46%<br>0.00%<br>75.78% | — | — | — |
-| BIRTH / hemingduo (AutoPET V'26) | Dataset619 MultiTalent | PENDING | — | — | — | — | — | — |
-| YixinChen scratch (AutoPET V'26) | scratch | DONE<br>169ep | 32.67%<br>0.02%<br>42.20% | 29.39%<br>0.00%<br>73.87% | 26.57%<br>0.00%<br>78.01% | — | — | — |
-| YixinChen / chenyixin (AutoPET V'26) | Dataset619 MultiTalent | PENDING | — | — | — | — | — | — |

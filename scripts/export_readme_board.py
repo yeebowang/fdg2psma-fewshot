@@ -1,17 +1,11 @@
 #!/usr/bin/env python3
-"""Export a README-facing progress board (no 9-fold grids / ETA / queue footer)."""
+"""Export a README-facing mean-metric summary table (no 9-fold grids / ETA / queue)."""
 from __future__ import annotations
 
 import argparse
 import json
 from pathlib import Path
 from typing import Any
-
-import matplotlib
-
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-from matplotlib.patches import FancyBboxPatch
 
 METHOD_ORDER = (
     "proto_retrieval",
@@ -25,10 +19,6 @@ METHOD_ORDER = (
     "seganypet_scratch",
     "mae_swinunetr",
     "mae_scratch",
-    "hemingduo_scratch",
-    "hemingduo",
-    "chenyixin_scratch",
-    "chenyixin",
 )
 METHOD_FDG_INIT = {
     "nnunet_mim": "PET+CT MIM",
@@ -42,10 +32,6 @@ METHOD_FDG_INIT = {
     "dpdnet_dualenc": "PET+CT dual-enc",
     "dpdnet": "scratch",
     "proto_retrieval": "none (retrieval)",
-    "hemingduo": "Dataset619 MultiTalent",
-    "hemingduo_scratch": "scratch",
-    "chenyixin": "Dataset619 MultiTalent",
-    "chenyixin_scratch": "scratch",
 }
 STAGE_COLS = (
     ("psma_fs50_f258", "PSMA fs50"),
@@ -55,14 +41,7 @@ STAGE_COLS = (
     ("psma_fc70", "PSMA fc70%"),
     ("fdg_test20", "FDG TEST"),
 )
-STATUS_COLOR = {
-    "done": "#2e7d32",
-    "running": "#ef6c00",
-    "waiting": "#0277bd",
-    "pending": "#757575",
-    "queued": "#757575",
-    "failed": "#c62828",
-}
+METRIC_HEADER = "Dice / FP / FN"
 
 
 def _pct(x: Any, digits: int = 2) -> str:
@@ -132,11 +111,28 @@ def sanitize_board(board: dict) -> dict:
 
 
 def render_png(board: dict, png: Path) -> None:
+    """Optional PNG board (not used in README; kept for paper / offline use)."""
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    from matplotlib.patches import FancyBboxPatch
+
+    status_color = {
+        "done": "#2e7d32",
+        "running": "#ef6c00",
+        "waiting": "#0277bd",
+        "pending": "#757575",
+        "queued": "#757575",
+        "failed": "#c62828",
+    }
     methods = [(k, board["methods"][k]) for k in METHOD_ORDER if k in board.get("methods", {})]
     n = len(methods)
     row_h = 0.92
     header_y = 0.55 + n * row_h + 0.25
-    cols = [("fdg", "① FDG\n(shared)", 1.35)] + [(sk, hdr, 1.22) for sk, hdr in STAGE_COLS]
+    cols = [("fdg", "① FDG\n(shared)", 1.35)] + [
+        (sk, f"{hdr}\n{METRIC_HEADER}", 1.35) for sk, hdr in STAGE_COLS
+    ]
     x0_method, x0 = 0.08, 1.55
     xs: list[tuple[float, str, str, float]] = []
     x = x0
@@ -151,13 +147,13 @@ def render_png(board: dict, png: Path) -> None:
     ax.axis("off")
     ax.set_title(
         f"FDG → PSMA few-shot · mean TEST metrics ({n} methods)\n"
-        f"{board.get('updated_at', '')} · Dice / FP / FN (%)  ·  no per-fold grids",
+        f"{board.get('updated_at', '')} · {METRIC_HEADER} (%)  ·  no per-fold grids",
         fontsize=11,
         pad=8,
     )
     ax.text(x0_method, header_y + 0.12, "Method\n(pretrained)", fontsize=8.5, fontweight="bold", va="center")
     for gx, _k, hdr, w in xs:
-        ax.text(gx + w * 0.5, header_y + 0.12, hdr, fontsize=8, fontweight="bold", va="center", ha="center")
+        ax.text(gx + w * 0.5, header_y + 0.12, hdr, fontsize=7.5, fontweight="bold", va="center", ha="center")
 
     y0 = header_y - 0.55
     for i, (key, m) in enumerate(methods):
@@ -191,11 +187,11 @@ def render_png(board: dict, png: Path) -> None:
             if sk == "fdg":
                 st = m.get("fdg_pretrain") or {}
                 txt = _fdg_cell(st)
-                color = STATUS_COLOR.get((st.get("status") or "pending").lower(), "#424242")
+                color = status_color.get((st.get("status") or "pending").lower(), "#424242")
             else:
                 st = m.get(sk) or {}
                 txt = _metric_triple(st)
-                color = STATUS_COLOR.get((st.get("status") or "pending").lower(), "#424242")
+                color = status_color.get((st.get("status") or "pending").lower(), "#424242")
             ax.text(
                 gx + w * 0.5,
                 y,
@@ -216,7 +212,10 @@ def render_png(board: dict, png: Path) -> None:
 
 
 def markdown_table(board: dict) -> str:
-    headers = ["Method", "Pretrained", "FDG"] + [h for _, h in STAGE_COLS]
+    # Metric columns carry Dice / FP / FN in the header so cell triples are self-explanatory.
+    headers = ["Method", "Pretrained", "FDG"] + [
+        f"{hdr}<br>{METRIC_HEADER}" for _, hdr in STAGE_COLS
+    ]
     lines = [
         "| " + " | ".join(headers) + " |",
         "| " + " | ".join(["---"] * len(headers)) + " |",
@@ -244,7 +243,7 @@ def main() -> None:
         type=Path,
         default=Path("/media/ybwang/data1/PSMA-CTRL/ICLR2026/vis/iclr2026_aligned_fdg_fs50_f258_board.json"),
     )
-    ap.add_argument("--png", type=Path, required=True)
+    ap.add_argument("--png", type=Path, default=None, help="Optional PNG (not embedded in README)")
     ap.add_argument("--out-json", type=Path, required=True)
     ap.add_argument("--out-md", type=Path, default=None)
     args = ap.parse_args()
@@ -252,12 +251,13 @@ def main() -> None:
     summary = sanitize_board(raw)
     args.out_json.parent.mkdir(parents=True, exist_ok=True)
     args.out_json.write_text(json.dumps(summary, indent=2, ensure_ascii=False) + "\n")
-    render_png(summary, args.png)
+    if args.png is not None:
+        render_png(summary, args.png)
+        print(f"[export] png={args.png}")
     md = markdown_table(summary)
     if args.out_md:
         args.out_md.write_text(md + "\n")
     print(md)
-    print(f"[export] png={args.png}")
     print(f"[export] json={args.out_json}")
 
 
