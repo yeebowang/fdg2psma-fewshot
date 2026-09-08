@@ -90,7 +90,8 @@ rsync -a --delete \
   --exclude '*.bbl' --exclude '*.blg' --exclude '*.synctex.gz' \
   "${SRC}/paper/" "${DST}/paper/" 2>/dev/null || true
 if [[ -d "${SRC}/docs" ]]; then
-  rsync -a --delete "${SRC}/docs/" "${DST}/docs/" 2>/dev/null || true
+  rsync -a --delete --exclude '*.pdf' --exclude '*.docx' \
+    "${SRC}/docs/" "${DST}/docs/" 2>/dev/null || true
 fi
 
 # ---- Delete redundant run one-offs (local machine / resume chains) ----
@@ -115,11 +116,16 @@ rm -f \
   run_chenyixin_pretrained_fc70_seed42_bg.sh \
   run_competition_*.sh \
   run_*competition*.sh \
+  run_gpu013_auto_*.sh \
+  run_hemingduo_*.sh \
+  run_chenyixin_*.sh \
   2>/dev/null || true
 
 # ---- Delete redundant progress-plot / UDA-only helpers from public scripts ----
 cd "${DST}/scripts"
 rm -f \
+  assert_competition_board_weights.py \
+  backfill_competition_fp_fn_from_score_detail.py \
   baseline1_eval_9fold_progress_plot.py \
   mae_fewshot50_9fold_progress_plot.py \
   mae_gentle_f258_progress_plot.py \

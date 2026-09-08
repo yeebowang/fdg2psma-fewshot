@@ -47,3 +47,4 @@ run/run_*competition*
 run/run_chenyixin_*
 run/run_hemingduo_*
 run/run_gpu013_auto_*
+third_party/**/*.zip
