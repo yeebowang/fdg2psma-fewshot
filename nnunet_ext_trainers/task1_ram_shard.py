@@ -5,7 +5,7 @@
   TASK1_RAM_SHARD_NUM=10
   TASK1_RAM_SHARD_EPOCHS=50          # 每片连训 epoch 数
   TASK1_RAM_SHARD_RESHUFFLE_EVERY=500  # 每隔多少 epoch 重新随机分片
-  TASK1_RAM_SHARD_SEED=20260730
+  TASK1_RAM_SHARD_SEED=42
 
 epoch e 时：
   cycle = e // RESHUFFLE_EVERY
@@ -41,7 +41,7 @@ def ram_shard_params() -> dict:
         "num_shards": max(1, env_int("TASK1_RAM_SHARD_NUM", 10)),
         "epochs_per_shard": max(1, env_int("TASK1_RAM_SHARD_EPOCHS", 50)),
         "reshuffle_every": max(1, env_int("TASK1_RAM_SHARD_RESHUFFLE_EVERY", 500)),
-        "base_seed": env_int("TASK1_RAM_SHARD_SEED", 20260730),
+        "base_seed": env_int("TASK1_RAM_SHARD_SEED", 42),
     }
 
 

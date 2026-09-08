@@ -1,5 +1,8 @@
 # Shared PSMA fc70% (421/59 train70) protocol — source from run scripts.
 # tr25 val25 bs2 · val every 20ep · single run (no f258) · FDG init · decline → TEST20
+# Reproducibility: all RNG seeds default to 42 unless explicitly overridden.
+export TASK1_TRAIN_SEED="${TASK1_TRAIN_SEED:-42}"
+export TASK1_RAM_SHARD_SEED="${TASK1_RAM_SHARD_SEED:-42}"
 PSMA_FC70_STAGE="${TASK1_PSMA_BOARD_STAGE:-psma_fc70}"
 PSMA_FC70_SPLITS="${TASK1_PSMA_FC70_SPLITS:-${ROOT}/ICLR2026/data/splits_baseline2_psma_uda_nnunet.json}"
 PSMA_FC70_BS="${TASK1_FIXED_BATCH_3D_FULLRES:-2}"

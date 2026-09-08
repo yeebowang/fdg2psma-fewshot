@@ -36,14 +36,18 @@ export TASK1_FEWSHOT_SPLIT_DIR="${TASK1_FEWSHOT_SPLIT_DIR:-${ROOT}/ICLR2026/data
 
 FDG_STAMP="${TASK1_UDA_FDG_STAMP:-20260817_225543_iclr2026_baseline1_fdg_2ch_fullres_gpu013_bs6_tr70_val0_169ep}"
 FDG_BEST="${TASK1_UDA_FDG_BEST:-}"
+if [[ -n "${FDG_BEST}" && ! -f "${FDG_BEST}" ]]; then
+  echo "[nnunet-fs${FEWSHOT_N}] WARN TASK1_UDA_FDG_BEST missing (${FDG_BEST}); re-resolve under stamp" >&2
+  FDG_BEST=""
+fi
 if [[ -z "${FDG_BEST}" ]]; then
   _fold="${WORK}/nnUNet_results/${FDG_STAMP}/${DS}/${TF}/fold_0"
-  for _c in checkpoint_final.pth checkpoint_latest.pth checkpoint_best.pth; do
+  for _c in checkpoint_final.pth checkpoint_best.pth checkpoint_latest.pth; do
     [[ -f "${_fold}/${_c}" ]] && { FDG_BEST="${_fold}/${_c}"; break; }
   done
 fi
-[[ -n "${FDG_BEST}" && -f "${FDG_BEST}" ]] || { echo "[error] missing FDG final/latest: ${FDG_BEST:-<unset>}" >&2; exit 1; }
-PREP_PLANS="${WORK}/nnUNet_preprocessed/${DS}/nnUNetPlans.json"
+[[ -n "${FDG_BEST}" && -f "${FDG_BEST}" ]] || { echo "[error] missing FDG final/best/latest under ${FDG_STAMP}" >&2; exit 1; }
+PREP_PLANS="${WORK}/nnUNet_preprocessed/${DS}/${PLANS_ID}.json"
 [[ -f "${PREP_PLANS}" ]] || { echo "[error] missing ${PREP_PLANS}" >&2; exit 1; }
 
 _req="${TASK1_NNUNET_RESULTS_STAMP_NAME:-}"
@@ -175,6 +179,9 @@ export TASK1_FOLDS="${FOLDS_CSV}"
 export TASK1_FOLD_GPUS="${FOLD_GPUS_CSV}"
 export TASK1_UDA_PRED_PER_GPU="${TASK1_UDA_PRED_PER_GPU:-5}"
 export TASK1_TEST_SKIP_DONE=1
+export TRAINER="${TRAINER}"
+export PLANS_ID="${PLANS_ID}"
+export CONFIG="${CONFIG}"
 bash "${ROOT}/ICLR2026/run/run_nnunet_psma_test20_f258_parallel.sh"
 
 AGG_JSON="${AGG_ROOT}/aggregate_test20_dice_f258.json"

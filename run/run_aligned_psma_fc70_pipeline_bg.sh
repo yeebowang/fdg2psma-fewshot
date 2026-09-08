@@ -4,6 +4,8 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+# shellcheck source=/dev/null
+source "/ICLR2026/run/_aligned_seed_env.sh"
 VIS="${ROOT}/ICLR2026/vis"
 BOARD="${TASK1_ALIGN_BOARD_JSON:-${VIS}/iclr2026_aligned_fdg_fs50_f258_board.json}"
 METHODS="${TASK1_METHODS:-nnunet,mae,monai,dpdnet,seganypet}"

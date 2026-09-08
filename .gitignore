@@ -39,3 +39,11 @@ third_party/seganypet_pip/
 
 *.whl
 third_party/**/*.zip
+
+# Local notes / accidental dumps
+docs/*.pdf
+data/fold0_nnunet.json
+run/run_*competition*
+run/run_chenyixin_*
+run/run_hemingduo_*
+run/run_gpu013_auto_*

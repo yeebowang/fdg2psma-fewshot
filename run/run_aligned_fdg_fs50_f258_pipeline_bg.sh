@@ -11,6 +11,8 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+# shellcheck source=/dev/null
+source "${ROOT}/ICLR2026/run/_aligned_seed_env.sh"
 CTRL="${ROOT}"
 DATA="${TASK1_BASE:-/media/ybwang/data1/PSMA-DATA}"
 REPO="${CTRL}/ICLR2026/3D-MAE-PET-CT"

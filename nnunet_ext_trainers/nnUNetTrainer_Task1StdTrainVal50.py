@@ -38,7 +38,8 @@ Task1：与排查 val bug 前一致的标准 train（继承 nnUNetTrainer 默认
   TASK1_RAM_SHARD_NUM  分片数，默认 10
   TASK1_RAM_SHARD_EPOCHS  每片连训 epoch 数，默认 50
   TASK1_RAM_SHARD_RESHUFFLE_EVERY  每隔多少 epoch 重新随机分片，默认 500
-  TASK1_RAM_SHARD_SEED  基础随机种子，默认 20260730（每 cycle 用 seed+cycle）
+  TASK1_RAM_SHARD_SEED  基础随机种子，默认 42（每 cycle 用 seed+cycle）
+  TASK1_TRAIN_SEED  全局随机种子（python/numpy/torch + CUDA），默认 42；设 empty/`none` 关闭
   TASK1_TRAIN_CASE_ALLOWLIST  逗号/空白分隔的 case id；仅用这些例训练（demo/predemo 子集）
   TASK1_TRAIN_CASE_LIST_FILE  可选：每行一个 case id 的文本文件（与 ALLOWLIST 二选一或并用）
   TASK1_SPLITS_FINAL_JSON  可选：覆盖 ``splits_final.json``（nnU-Net 列表 ``[{train,val}, ...]``）；
@@ -210,6 +211,7 @@ class nnUNetTrainer_Task1StdTrainVal50(nnUNetTrainer):
         self._task1_fullcase_val_dl = None
         self._task1_fullcase_val_gen = None
         self._task1_fullcase_val_queue: list | None = None
+        self._task1_train_seed = self._task1_apply_train_seed()
         if self.local_rank == 0 and _ram_shard_enabled_env():
             _, _, _ram_shard_params, _, _ = _ram_shard_import()
             p = _ram_shard_params()
@@ -218,6 +220,26 @@ class nnUNetTrainer_Task1StdTrainVal50(nnUNetTrainer):
                 f"num={p['num_shards']} epochs_per_shard={p['epochs_per_shard']} "
                 f"reshuffle_every={p['reshuffle_every']} seed={p['base_seed']}"
             )
+
+    def _task1_apply_train_seed(self) -> int | None:
+        """Fixed RNG seed via TASK1_TRAIN_SEED (default 42). Set empty/`none` to disable."""
+        raw = os.environ.get("TASK1_TRAIN_SEED", "42")
+        if raw is None:
+            return None
+        s = str(raw).strip().lower()
+        if s in ("", "none", "off", "disable", "-1"):
+            return None
+        seed = int(s)
+        import random
+
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
+        if self.local_rank == 0:
+            self.print_to_log_file(f"[Task1StdTrainVal50] TASK1_TRAIN_SEED={seed}")
+        return seed
 
     def _task1_finish_dataloaders(self) -> None:
         if self.dataloader_train is None and self.dataloader_val is None:
@@ -787,7 +809,8 @@ class nnUNetTrainer_Task1StdTrainVal50(nnUNetTrainer):
         if not ids:
             n = max(1, int(self._task1_fdg_val_iters()))
             return [self.validation_step(next(self.dataloader_val)) for _ in range(n)]
-        rng = np.random.RandomState(int(self.current_epoch) + 20260818)
+        base = int(self._task1_train_seed) if self._task1_train_seed is not None else 42
+        rng = np.random.RandomState(base + int(self.current_epoch))
         order = ids[:]
         rng.shuffle(order)
         bs = max(1, int(getattr(dl, "batch_size", self.batch_size)))

@@ -14,9 +14,20 @@ GPU="${TASK1_PSMA_FC70_GPU:-0}"
 PRED_PER_GPU="${TASK1_UDA_PRED_PER_GPU:-5}"
 
 DS="Dataset228_AutoPETIV_Task1_2ch"
-TF="nnUNetTrainer_Task1StdTrainVal50__nnUNetPlans__3d_fullres"
+TRAINER="${TRAINER:-nnUNetTrainer_Task1StdTrainVal50}"
+PLANS_ID="${PLANS_ID:-nnUNetPlans}"
+TF="${TRAINER}__${PLANS_ID}__3d_fullres"
 STAMP="${PARENT}_f${FOLD}"
 FOLD_DIR="${WORK}/nnUNet_results/${STAMP}/${DS}/${TF}/fold_0"
+# Fallback: discover trainer folder if env mismatched (e.g. MultiTalent)
+if [[ ! -d "${FOLD_DIR}" ]]; then
+  _found="$(find "${WORK}/nnUNet_results/${STAMP}/${DS}" -maxdepth 2 -type d -name 'fold_0' 2>/dev/null | head -1 || true)"
+  if [[ -n "${_found}" ]]; then
+    FOLD_DIR="${_found}"
+    TF="$(basename "$(dirname "${FOLD_DIR}")")"
+    echo "[test20-fc70] auto TF=${TF}"
+  fi
+fi
 CASES_JSON="${ROOT}/ICLR2026/data/splits_mae_psma_test20.json"
 GT_DIR="${WORK}/nnUNet_raw/${DS}/labelsTr"
 EVAL_ROOT="${WORK}/nnUNet_results/${PARENT}/psma_test20_eval"

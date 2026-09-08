@@ -1,6 +1,6 @@
 {
   "protocol": "FDG→PSMA fs50 f258; align MAE: full-case · 100ep · best=val Dice · TEST20",
-  "updated_at": "2026-09-05 13:42:16 CST",
+  "updated_at": "2026-09-08 10:35:22 CST",
   "updated_note": "README summary · mean Dice/FP/FN only",
   "metrics": "Dice / FP / FN (%) · Dice excludes empty-GT · FP=FP/Neg · FN=FN/Pos (voxel micro-avg)",
   "methods": {
@@ -49,9 +49,9 @@
       },
       "fdg_test20": {
         "status": "done",
-        "mean": 0.0004919522871739338,
-        "mean_fp": 0.057461227071267655,
-        "mean_fn": 0.7598515279108845,
+        "mean": 0.0006582188947491453,
+        "mean_fp": 0.055820421136378744,
+        "mean_fn": 0.7070020225940806,
         "train_time": null
       }
     },
@@ -116,10 +116,10 @@
       },
       "psma_fs50_f258": {
         "status": "done",
-        "mean": 0.3218599858463512,
-        "mean_fp": 0.00024238277284210663,
-        "mean_fn": 0.4019536114982316,
-        "train_time": "40m03s"
+        "mean": 0.41565470959988754,
+        "mean_fp": 0.00013067816632336614,
+        "mean_fn": 0.457448842757427,
+        "train_time": "30m26s"
       },
       "psma_fs10_f258": {
         "status": "done",
@@ -151,7 +151,7 @@
       },
       "fdg_test20": {
         "status": "done",
-        "mean": 0.562267448661781,
+        "mean": 0.5622674486617811,
         "mean_fp": 7.599760222921051e-05,
         "mean_fn": 0.36750914544248275,
         "train_time": null
@@ -341,7 +341,7 @@
       },
       "psma_fs0": {
         "status": "done",
-        "mean": 0.16713248443155407,
+        "mean": 0.1671324844315541,
         "mean_fp": 0.0011586180863268293,
         "mean_fn": 0.5022980910515522,
         "train_time": null
@@ -355,7 +355,7 @@
       },
       "fdg_test20": {
         "status": "done",
-        "mean": 0.6141684192459688,
+        "mean": 0.6141684192459689,
         "mean_fp": 3.849909542755797e-05,
         "mean_fn": 0.39160577383804507,
         "train_time": null
@@ -406,7 +406,7 @@
       },
       "fdg_test20": {
         "status": "done",
-        "mean": 0.4467984386583705,
+        "mean": 0.349716999877943,
         "mean_fp": 9.699740627336806e-06,
         "mean_fn": 0.7236982142198961,
         "train_time": null

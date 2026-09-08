@@ -467,7 +467,7 @@ def default_board() -> dict[str, Any]:
             "hemingduo": {
                 "label": METHOD_LABELS["hemingduo"],
                 "repo": "ICLR2026/third_party/autoPET-V-BIRTH-final",
-                "board_policy": "Dataset619 (Zenodo 13753413) → FDG → PSMA; FORBID 14007247/EDT/LocalEdit final ckpts",
+                "board_policy": "FDG=StdTrainVal50 aligned (no MultiTalent head); PSMA fewshot may be historical MultiTalent",
                 "fdg_pretrain": {
                     "status": "pending",
                     "stamp": "",
@@ -476,7 +476,7 @@ def default_board() -> dict[str, Any]:
                     "total_epochs": 169,
                     "train_iters": 70,
                     "val_iters": 0,
-                    "note": "load Dataset619 MultiTalent → FDG tr70/val0 · 169ep (not LesionTracer final)",
+                    "note": "StdTrainVal50 FDG · no Dataset619 MultiTalent head · tr70/val0 · 169ep",
                 },
                 **_method_psma_stages("hemingduo"),
             },
@@ -499,7 +499,7 @@ def default_board() -> dict[str, Any]:
             "chenyixin": {
                 "label": METHOD_LABELS["chenyixin"],
                 "repo": "ICLR2026/third_party/autopet-v-yixinchen",
-                "board_policy": "Dataset619 (Zenodo 13753413) → FDG → PSMA; FORBID 14007247/LocalEdit/TACE final ckpts",
+                "board_policy": "FDG=StdTrainVal50 aligned (no MultiTalent head); PSMA fewshot may be historical MultiTalent",
                 "fdg_pretrain": {
                     "status": "pending",
                     "stamp": "",
@@ -508,7 +508,7 @@ def default_board() -> dict[str, Any]:
                     "total_epochs": 169,
                     "train_iters": 70,
                     "val_iters": 0,
-                    "note": "load Dataset619 MultiTalent → FDG tr70/val0 · 169ep (not LocalEdit final)",
+                    "note": "StdTrainVal50 FDG · no Dataset619 MultiTalent head · tr70/val0 · 169ep",
                 },
                 **_method_psma_stages("chenyixin"),
             },
@@ -797,7 +797,16 @@ def _sum_epoch_sec(rows: list[dict]) -> float | None:
 
 
 def _nnunet_fold_dir(stamp: str) -> Path:
-    return NN_RESULTS / stamp / DS228 / TF228 / "fold_0"
+    """Resolve Dataset228 fold_0 under stamp (StdTrainVal50 or MultiTalent)."""
+    preferred = NN_RESULTS / stamp / DS228 / TF228 / "fold_0"
+    if preferred.is_dir():
+        return preferred
+    root = NN_RESULTS / stamp / DS228
+    if root.is_dir():
+        for fd in sorted(root.glob("*/fold_0")):
+            if fd.is_dir():
+                return fd
+    return preferred
 
 
 def _nnunet_epoch_time_sum(fold_dir: Path) -> float | None:
@@ -1453,6 +1462,11 @@ _DEFAULT_EPOCH_SEC: dict[str, float] = {
     "dpdnet": 180.0,
     "nnunet_mim": 200.0,
     "nnunet": 200.0,
+    # MultiTalent FDG (3-GPU tr70/val25) ≈ 80–90s/ep
+    "chenyixin": 85.0,
+    "chenyixin_scratch": 85.0,
+    "hemingduo": 85.0,
+    "hemingduo_scratch": 85.0,
 }
 # PSMA fewshot / fc70 measured wall ≈ 6–40s/train-ep (not FDG 400s).
 _FEWSHOT_EPOCH_SEC: dict[str, float] = {
@@ -1722,6 +1736,10 @@ def _resolve_stage_stamp(mkey: str, stage_key: str, st: dict) -> str:
         "nnunet_mim": "nnunet_mim_psma_fc70",
         "nnunet": "nnunet_psma_fc70",
         "dpdnet_dualenc": "dpdnet_dualenc_psma_fc70",
+        "chenyixin": "chenyixin_psma_fc70",
+        "hemingduo": "hemingduo_psma_fc70",
+        "chenyixin_scratch": "chenyixin_scratch_psma_fc70",
+        "hemingduo_scratch": "hemingduo_scratch_psma_fc70",
     }.get(mkey, "")
     if stage_key == FC70_STAGE_KEY and tag:
         for base in (REPO, NN_RESULTS):
@@ -1739,7 +1757,14 @@ def _single_run_train_eta(mkey: str, sub: str, fold: str, stamp: str, total: int
     fold_i = int(fold.replace("fold", "")) if str(fold).startswith("fold") else int(fold or 0)
     if mkey in ("dpdnet", "dpdnet_dualenc"):
         info = _eta_from_nnunet_fold(_dpdnet_psma_fold_dir(stamp, fold_i), total)
-    elif mkey in ("nnunet", "nnunet_mim"):
+    elif mkey in (
+        "nnunet",
+        "nnunet_mim",
+        "chenyixin",
+        "hemingduo",
+        "chenyixin_scratch",
+        "hemingduo_scratch",
+    ):
         fd = _nnunet_fold_dir(f"{stamp}_f{fold_i}")
         if not fd.is_dir():
             fd = _nnunet_fold_dir(stamp)
@@ -2676,6 +2701,8 @@ def _refresh_nnunet_family_psma_stage(st: dict, *, is_dpdnet: bool = False) -> N
 def refresh_running_etas(board: dict) -> None:
     """Attach eta / epoch progress onto any stage with status=running."""
     _reset_runtime_caches()
+    _clear_multitalent_all_bg_cells(board)
+    _promote_live_competition_fdg(board)
     methods = board.get("methods") or {}
 
     # nnUNet / competition rows (nnUNet-style TEST20 under parent stamp)
@@ -2768,11 +2795,28 @@ def refresh_running_etas(board: dict) -> None:
             seg_fdg["epoch"] = info.get("epoch")
             seg_fdg["total_epochs"] = total
 
-    # nnUNet FDG (Dataset228 fold_0; stamp often missing until FDG done — auto-resolve)
-    for _nn_key in ("nnunet", "nnunet_mim"):
+    # nnUNet / competition FDG (Dataset228 fold_0; MultiTalent or StdTrainVal50)
+    for _nn_key in (
+        "nnunet",
+        "nnunet_mim",
+        "hemingduo",
+        "hemingduo_scratch",
+        "chenyixin",
+        "chenyixin_scratch",
+    ):
         nn_fdg = methods.get(_nn_key, {}).get("fdg_pretrain") or {}
         if (nn_fdg.get("status") or "").lower() in ("running", "done", "queued"):
-            stamp = _resolve_nnunet_fdg_stamp(nn_fdg) if _nn_key == "nnunet" else (nn_fdg.get("stamp") or "").strip()
+            if _nn_key == "nnunet":
+                stamp = _resolve_nnunet_fdg_stamp(nn_fdg)
+            else:
+                stamp = (nn_fdg.get("stamp") or "").strip()
+                if not stamp and _nn_key in ("chenyixin", "hemingduo", "chenyixin_scratch", "hemingduo_scratch"):
+                    last = CTRL / "ICLR2026/vis" / f"{_nn_key}_fdg_LAST_STAMP.txt"
+                    if last.is_file():
+                        try:
+                            stamp = last.read_text().strip()
+                        except OSError:
+                            stamp = ""
             if stamp and not (nn_fdg.get("stamp") or "").strip():
                 nn_fdg["stamp"] = stamp
             if stamp:
@@ -2844,6 +2888,10 @@ def refresh_running_etas(board: dict) -> None:
         "dpdnet": ("dpdnet", "fold0"),
         "nnunet_mim": ("nnunet", "fold0"),
         "nnunet": ("nnunet", "fold0"),
+        "chenyixin": ("nnunet", "fold0"),
+        "hemingduo": ("nnunet", "fold0"),
+        "chenyixin_scratch": ("nnunet", "fold0"),
+        "hemingduo_scratch": ("nnunet", "fold0"),
     }
     for stage_key in (FC70_STAGE_KEY, FDG_TEST_STAGE_KEY, PSMA_FS0_STAGE_KEY):
         for mkey, (sub, fold) in _SINGLE_RUN_ETA.items():
@@ -3694,6 +3742,33 @@ STAGE_RUNTIME_PATTERNS: dict[tuple[str, str], tuple[str, ...]] = {
         "iclr2026_chenyixin_psma_fs50",
         "TASK1_BOARD_METHOD=chenyixin",
         "run_competition_aligned",
+        "run_chenyixin_pretrained_fs50_seed42",
+        "chenyixin_pretrained_fs50_seed42",
+    ),
+    ("chenyixin", "psma_fc70"): (
+        "chenyixin_psma_fc70",
+        "iclr2026_chenyixin_psma_fc70",
+        "chenyixin_pretrained_fc70_seed42",
+        "TASK1_BOARD_METHOD=chenyixin",
+        "run_nnunet_psma_fc70",
+    ),
+    ("hemingduo", "psma_fc70"): (
+        "hemingduo_psma_fc70",
+        "iclr2026_hemingduo_psma_fc70",
+        "TASK1_BOARD_METHOD=hemingduo",
+        "run_nnunet_psma_fc70",
+    ),
+    ("chenyixin_scratch", "psma_fc70"): (
+        "chenyixin_scratch_psma_fc70",
+        "iclr2026_chenyixin_scratch_psma_fc70",
+        "TASK1_BOARD_METHOD=chenyixin_scratch",
+        "run_nnunet_psma_fc70",
+    ),
+    ("hemingduo_scratch", "psma_fc70"): (
+        "hemingduo_scratch_psma_fc70",
+        "iclr2026_hemingduo_scratch_psma_fc70",
+        "TASK1_BOARD_METHOD=hemingduo_scratch",
+        "run_nnunet_psma_fc70",
     ),
     ("mae_swinunetr", "psma_fs10_f258"): (
         "mae_psma_fs10",
@@ -3946,10 +4021,140 @@ def _collect_running_tasks(board: dict) -> list[str]:
     return waiting + out
 
 
+def _is_all_bg_collapse(st: dict) -> bool:
+    """MultiTalent empty-head collapse: Dice≈0 (usually with FN≈100%)."""
+    mean = st.get("mean")
+    if not isinstance(mean, (int, float)) or mean != mean:
+        return False
+    if float(mean) > 1e-4:
+        return False
+    fp, fn = _stage_fp_fn(st)
+    if fn is not None:
+        return float(fn) >= 0.99
+    note = str(st.get("note") or "").lower()
+    return (
+        "100.00%" in note
+        or "0.00%/0.00%/100" in note
+        or "all-bg" in note
+        or float(mean) <= 1e-4
+    )
+
+
+def _clear_multitalent_all_bg_cells(board: dict) -> None:
+    """Drop invalid Multitalent fs0/FDG TEST cells so watchers cannot keep 0/0/100."""
+    for mkey in ("chenyixin", "hemingduo"):
+        m = board.get("methods", {}).get(mkey) or {}
+        for stage_key in (PSMA_FS0_STAGE_KEY, FDG_TEST_STAGE_KEY):
+            st = m.get(stage_key)
+            if not isinstance(st, dict) or not _is_all_bg_collapse(st):
+                continue
+            st.clear()
+            st.update(
+                {
+                    "status": "pending",
+                    "mean": None,
+                    "mean_fp": None,
+                    "mean_fn": None,
+                    "fp_rate": None,
+                    "fn_rate": None,
+                    "fold_dice": {},
+                    "stamp": "",
+                    "eta": None,
+                    "eta_sec": None,
+                    "note": "cleared MultiTalent all-bg (0/0/100) · await StdTrainVal50 FDG re-eval",
+                }
+            )
+
+
+def _stamp_train_live(stamp: str) -> bool:
+    stamp = (stamp or "").strip()
+    if not stamp:
+        return False
+    # Do NOT use _pgrep_any here: it skips monitor_task1_train_auto_resume_guard.
+    if _pgrep_cmdlines(stamp):
+        return True
+    try:
+        r = subprocess.run(
+            ["docker", "ps", "-q"],
+            capture_output=True,
+            text=True,
+            timeout=8,
+        )
+        ids = [x.strip() for x in (r.stdout or "").splitlines() if x.strip()]
+    except (OSError, subprocess.SubprocessError):
+        ids = []
+    for cid in ids[:12]:
+        try:
+            ir = subprocess.run(
+                ["docker", "inspect", "-f", "{{range .Config.Env}}{{println .}}{{end}}", cid],
+                capture_output=True,
+                text=True,
+                timeout=8,
+            )
+        except (OSError, subprocess.SubprocessError):
+            continue
+        if stamp in (ir.stdout or ""):
+            return True
+    fd = _nnunet_fold_dir(stamp)
+    if fd.is_dir() and not (fd / "checkpoint_final.pth").is_file():
+        logs = list(fd.glob("training_log*.txt"))
+        if logs:
+            try:
+                age = time.time() - max(p.stat().st_mtime for p in logs)
+            except OSError:
+                age = 1e9
+            if age < 900.0:
+                return True
+    return False
+
+
+def _promote_live_competition_fdg(board: dict) -> None:
+    """If competition FDG stamp is training, force RUNNING + live ETA stamp."""
+    methods = board.get("methods") or {}
+    for mkey in ("chenyixin", "hemingduo"):
+        last_p = CTRL / "ICLR2026/vis" / f"{mkey}_fdg_LAST_STAMP.txt"
+        stamp = ""
+        if last_p.is_file():
+            try:
+                stamp = last_p.read_text().strip()
+            except OSError:
+                stamp = ""
+        if not stamp:
+            continue
+        fd = _nnunet_fold_dir(stamp)
+        if not fd.is_dir():
+            continue
+        if (fd / "checkpoint_final.pth").is_file():
+            continue
+        if not _stamp_train_live(stamp):
+            continue
+        st = (methods.get(mkey) or {}).get("fdg_pretrain")
+        if not isinstance(st, dict):
+            continue
+        st["status"] = "running"
+        st["stamp"] = stamp
+        st["total_epochs"] = int(st.get("total_epochs") or 169)
+        st["device"] = "gpu"
+        st["gpu_ids"] = st.get("gpu_ids") or "0,1,3"
+        tf = fd.parent.name if fd.parent else ""
+        if "StdTrainVal50" in tf or "MultiTalent" not in tf:
+            st["note"] = f"StdTrainVal50 FDG · no MultiTalent head · tr70/val0 · {stamp}"
+            st["val_iters"] = 0
+            st["train_iters"] = int(st.get("train_iters") or 70)
+            st["bs"] = int(st.get("bs") or 6)
+            st["bs_note"] = st.get("bs_note") or "gbs 3GPU"
+        else:
+            note = str(st.get("note") or "")
+            if "rescue" not in note.lower():
+                st["note"] = f"Multitalent FDG rescue · {stamp}"
+
+
 def board_self_check(board: dict) -> dict[str, Any]:
     """Detect empty board cells: running/done vs queue gap."""
     _reset_runtime_caches()
     ensure_methods(board)
+    _clear_multitalent_all_bg_cells(board)
+    _promote_live_competition_fdg(board)
     _apply_live_extra_fold_running(board)
     _promote_waiting_to_running(board)
     vis = CTRL / "ICLR2026/vis"
@@ -3987,6 +4192,11 @@ def board_self_check(board: dict) -> dict[str, Any]:
                 if live_gpus:
                     st["device"] = "gpu"
                     st["gpu_ids"] = ",".join(str(i) for i in live_gpus)
+                # Bind stamp from live process when cell stamp is empty
+                if not (st.get("stamp") or "").strip():
+                    resolved = _resolve_stage_stamp(mkey, stage_key, st)
+                    if resolved:
+                        st["stamp"] = resolved
                 if stage_key == FDG_TEST_STAGE_KEY:
                     st["phase"] = "TEST20"
                     live = st.get("test_live") if isinstance(st.get("test_live"), dict) else {}
@@ -4417,16 +4627,76 @@ def _sync_mae_family_fold_displays(st: dict, sub: str) -> None:
         st["note"] = f"train {n_tr}/9 · TEST20 {n_te}/9 · extra VAL on board"
 
 
+def _fill_fp_fn_from_score_details(st: dict, stamp: str) -> None:
+    """Fill mean_fp/mean_fn from psma_test20_eval/fold*/score_detail.json when missing."""
+    if not stamp:
+        return
+    if st.get("mean_fp") is not None and st.get("mean_fn") is not None:
+        return
+    eval_root = NN_RESULTS / stamp / "psma_test20_eval"
+    scores: list[dict] = []
+    if eval_root.is_dir():
+        for f in NINE_FOLD_STRS:
+            p = eval_root / f"fold{f}" / "score_detail.json"
+            if not p.is_file():
+                continue
+            try:
+                sd = json.loads(p.read_text())
+            except (OSError, TypeError, ValueError, json.JSONDecodeError):
+                continue
+            if isinstance(sd.get("mean_dice"), (int, float)):
+                scores.append(sd)
+            elif isinstance(sd.get("fp_rate"), (int, float)) or isinstance(sd.get("mean_fp"), (int, float)):
+                scores.append(sd)
+    if not scores:
+        return
+    sum_fp = sum(int(s.get("sum_fp") or 0) for s in scores)
+    sum_fn = sum(int(s.get("sum_fn") or 0) for s in scores)
+    sum_neg = sum(int(s.get("sum_neg_voxels") or 0) for s in scores)
+    sum_pos = sum(int(s.get("sum_pos_voxels") or 0) for s in scores)
+    if st.get("mean_fp") is None:
+        if sum_neg > 0:
+            st["mean_fp"] = float(sum_fp) / float(sum_neg)
+        else:
+            rates = [
+                float(s.get("fp_rate", s.get("mean_fp")))
+                for s in scores
+                if isinstance(s.get("fp_rate", s.get("mean_fp")), (int, float))
+            ]
+            if rates:
+                st["mean_fp"] = sum(rates) / float(len(rates))
+    if st.get("mean_fn") is None:
+        if sum_pos > 0:
+            st["mean_fn"] = float(sum_fn) / float(sum_pos)
+        else:
+            rates = [
+                float(s.get("fn_rate", s.get("mean_fn")))
+                for s in scores
+                if isinstance(s.get("fn_rate", s.get("mean_fn")), (int, float))
+            ]
+            if rates:
+                st["mean_fn"] = sum(rates) / float(len(rates))
+
+
 def _ingest_nnunet_test20_aggregate(nn: dict) -> bool:
     """If current stamp has a finished TEST20 aggregate, fill scores and mark done."""
-    stamp = nn.get("stamp") or ""
+    stamp = str(nn.get("stamp") or "").strip()
+    # Guard against accidental log-path contamination (…gpu0.log)
+    if stamp.endswith(".log") or stamp.endswith(".txt"):
+        stamp = stamp.rsplit(".", 1)[0]
+        nn["stamp"] = stamp
     if not stamp:
         return False
     status0 = (nn.get("status") or "").lower()
-    # queued rerun / pending must not re-ingest the previous stamp's TEST
-    if status0 in ("queued", "pending"):
+    # Prefer VIS fc70 aggregate for this stamp (even if status lagged as pending)
+    agg_fc70 = CTRL / "ICLR2026/vis" / f"aggregate_nnunet_psma_fc70_{stamp}.json"
+    is_fc70_cell = bool(agg_fc70.is_file()) or ("_psma_fc70_" in stamp) or (
+        str(nn.get("note") or "").lower().find("fc70") >= 0 and "fs50" not in stamp
+    )
+    # queued/pending must not re-ingest stale fewshot; fc70 single-run MAY recover
+    if status0 in ("queued", "pending") and not is_fc70_cell:
         return False
-    if nn.get("test_invalidated") and status0 not in ("done", "running"):
+    if nn.get("test_invalidated") and status0 not in ("done", "running") and not is_fc70_cell:
         return False
     agg = CTRL / "ICLR2026/vis" / f"aggregate_nnunet_psma_fs50_f258_{stamp}.json"
     if not agg.is_file():
@@ -4435,6 +4705,8 @@ def _ingest_nnunet_test20_aggregate(nn: dict) -> bool:
             if cand.is_file():
                 agg = cand
                 break
+    if not agg.is_file() and agg_fc70.is_file():
+        agg = agg_fc70
     if not agg.is_file():
         agg = CTRL / "ICLR2026/vis" / f"aggregate_nnunet_psma_fc70_{stamp}.json"
     if not agg.is_file():
@@ -4452,6 +4724,8 @@ def _ingest_nnunet_test20_aggregate(nn: dict) -> bool:
         if md is None:
             md = ad.get("fold_mean")
         if isinstance(md, (int, float)) and md == md:
+            # Preserve already-valid FP/FN on the cell (do not wipe to None).
+            prev_fp, prev_fn = _stage_fp_fn(nn)
             nn["fold_dice"] = {"0": float(md)}
             nn["mean"] = float(md)
             nn["status"] = "done"
@@ -4464,10 +4738,18 @@ def _ingest_nnunet_test20_aggregate(nn: dict) -> bool:
             if md_pos is not None:
                 nn["mean"] = float(md_pos)
                 nn["fold_dice"] = {"0": float(md_pos)}
+            # Aggregate often predates FP/FN — pool from fold0(+)/score_detail.
+            if nn.get("mean_fp") is None or nn.get("mean_fn") is None:
+                _fill_fp_fn_from_score_details(nn, stamp)
+            if nn.get("mean_fp") is None and prev_fp is not None:
+                nn["mean_fp"] = prev_fp
+            if nn.get("mean_fn") is None and prev_fn is not None:
+                nn["mean_fn"] = prev_fn
+            fp0, fn0 = _stage_fp_fn(nn)
             nn["note"] = (
                 f"TEST20 DONE · {_pct_fmt(nn['mean'], 2)}/"
-                f"{_pct_fmt(nn.get('mean_fp'), 2)}/{_pct_fmt(nn.get('mean_fn'), 2)}"
-                if _stage_fp_fn(nn)[0] is not None
+                f"{_pct_fmt(fp0, 2)}/{_pct_fmt(fn0, 2)}"
+                if fp0 is not None and fn0 is not None
                 else f"TEST20 DONE · fc70 single · {nn['mean']:.3f}"
             )
             return True
@@ -4486,7 +4768,9 @@ def _ingest_nnunet_test20_aggregate(nn: dict) -> bool:
             incoming[f] = float(d)
     if not incoming and not pending:
         return False
-    fd = _merge_fold_scores(nn.get("fold_dice"), incoming)
+    # Replace from this stamp's aggregate — do NOT merge leftover folds from a prior stamp
+    # (retrain 3/9 must not inherit stale 9/9 scores from the previous board cell).
+    fd = {str(k): float(v) for k, v in incoming.items()}
     nn["fold_dice"] = fd
     nn["mean"] = _fold_score_mean(fd)
     n_ok = len(fd)
@@ -4522,37 +4806,7 @@ def _ingest_nnunet_test20_aggregate(nn: dict) -> bool:
         nn["fold_ckpt_ep"] = fep
     _apply_fp_fn_from_agg(nn, ad)
     if nn.get("mean_fp") is None or nn.get("mean_fn") is None:
-        # Pool from per-fold score_detail under stamp (aggregate may predate FP/FN fields).
-        eval_root = NN_RESULTS / stamp / "psma_test20_eval"
-        scores: list[dict] = []
-        if eval_root.is_dir():
-            for f in NINE_FOLD_STRS:
-                p = eval_root / f"fold{f}" / "score_detail.json"
-                if not p.is_file():
-                    continue
-                try:
-                    sd = json.loads(p.read_text())
-                except (OSError, TypeError, ValueError, json.JSONDecodeError):
-                    continue
-                if isinstance(sd.get("mean_dice"), (int, float)):
-                    scores.append(sd)
-        if scores:
-            sum_fp = sum(int(s.get("sum_fp") or 0) for s in scores)
-            sum_fn = sum(int(s.get("sum_fn") or 0) for s in scores)
-            sum_neg = sum(int(s.get("sum_neg_voxels") or 0) for s in scores)
-            sum_pos = sum(int(s.get("sum_pos_voxels") or 0) for s in scores)
-            if sum_neg > 0:
-                nn["mean_fp"] = float(sum_fp) / float(sum_neg)
-            else:
-                rates = [float(s["fp_rate"]) for s in scores if isinstance(s.get("fp_rate"), (int, float))]
-                if rates:
-                    nn["mean_fp"] = sum(rates) / float(len(rates))
-            if sum_pos > 0:
-                nn["mean_fn"] = float(sum_fn) / float(sum_pos)
-            else:
-                rates = [float(s["fn_rate"]) for s in scores if isinstance(s.get("fn_rate"), (int, float))]
-                if rates:
-                    nn["mean_fn"] = sum(rates) / float(len(rates))
+        _fill_fp_fn_from_score_details(nn, stamp)
     fp, fn = nn.get("mean_fp"), nn.get("mean_fn")
     if isinstance(nn.get("mean"), (int, float)) and isinstance(fp, (int, float)) and isinstance(fn, (int, float)):
         if n_ok >= 9:
@@ -4985,6 +5239,98 @@ def _enrich_nnunet_psma_stage(nn: dict) -> None:
             nn["ckpt"] = "checkpoint_best.pth"
 
 
+def _latest_nnunet_fewshot_stamp(method: str, fewshot_n: int) -> str:
+    """Newest parent stamp with a finished TEST20 aggregate for method fsN."""
+    if fewshot_n not in (5, 10, 50):
+        return ""
+    pat = f"*_iclr2026_{method}_psma_fs{fewshot_n}_f258_*"
+    cands: list[tuple[float, int, float, str]] = []
+    try:
+        roots = list(NN_RESULTS.glob(pat))
+    except OSError:
+        return ""
+    for p in roots:
+        name = p.name
+        # skip fold child dirs …_f0 …_f8
+        if re.search(r"_f\d+$", name):
+            continue
+        if not p.is_dir():
+            continue
+        agg = p / "aggregate_test20_dice_f258.json"
+        if not agg.is_file():
+            continue
+        try:
+            ad = json.loads(agg.read_text())
+        except (OSError, TypeError, ValueError, json.JSONDecodeError):
+            continue
+        folds = ad.get("folds") or {}
+        mean = ad.get("fold_mean")
+        if mean is None:
+            mean = ad.get("mean")
+        try:
+            mean_f = float(mean) if mean is not None else float("nan")
+        except (TypeError, ValueError):
+            continue
+        if mean_f != mean_f or mean_f <= 0:
+            continue
+        n_ok = len(folds) if isinstance(folds, dict) else 0
+        if n_ok < 3:
+            continue
+        try:
+            mtime = float(p.stat().st_mtime)
+        except OSError:
+            mtime = 0.0
+        cands.append((mtime, n_ok, mean_f, name))
+    if not cands:
+        return ""
+    # Prefer newest stamp first (so retrains beat stale 9/9), then denser folds
+    cands.sort(key=lambda x: (x[0], x[1] >= 9, x[1]), reverse=True)
+    return cands[0][3]
+
+
+def _auto_bind_missing_nnunet_fewshot(st: dict, method: str, fewshot_n: int) -> None:
+    """Bind newest on-disk TEST20 stamp; upgrade stale scored cells when a newer parent exists."""
+    if not isinstance(st, dict):
+        return
+    status = (st.get("status") or "").lower()
+    # Never clobber an in-flight retrain / live job
+    if status in ("running", "waiting"):
+        return
+    pats = STAGE_RUNTIME_PATTERNS.get((method, f"psma_fs{fewshot_n}_f258"), ())
+    if pats and _pgrep_any(pats):
+        return
+    if _pgrep_any((f"iclr2026_{method}_psma_fs{fewshot_n}", f"{method}_psma_fs{fewshot_n}")):
+        return
+    stamp = _latest_nnunet_fewshot_stamp(method, fewshot_n)
+    if not stamp:
+        return
+    cur = str(st.get("stamp") or "").strip()
+    mean = st.get("mean")
+    has_folds = bool(st.get("fold_dice"))
+    scored = isinstance(mean, (int, float)) and mean == mean and (has_folds or status == "done")
+    if cur == stamp and scored:
+        return
+    if cur and cur != stamp and scored:
+        # Only upgrade when the newest parent is strictly newer than the bound stamp
+        try:
+            cur_mt = float((NN_RESULTS / cur).stat().st_mtime) if (NN_RESULTS / cur).is_dir() else 0.0
+        except OSError:
+            cur_mt = 0.0
+        try:
+            new_mt = float((NN_RESULTS / stamp).stat().st_mtime) if (NN_RESULTS / stamp).is_dir() else 0.0
+        except OSError:
+            new_mt = 0.0
+        if new_mt <= cur_mt:
+            return
+        st["fold_dice"] = {}
+        st["mean"] = None
+        st["mean_fp"] = None
+        st["mean_fn"] = None
+    st["stamp"] = stamp
+    st["status"] = "done"
+    st["test_invalidated"] = False
+
+
 def enrich_test_ckpt_epochs(board: dict) -> None:
     """Fill fold_dice + fold_ckpt_ep for all PSMA fs50/fs10/fs5 stages."""
     ensure_methods(board)
@@ -5003,6 +5349,7 @@ def enrich_test_ckpt_epochs(board: dict) -> None:
         for _n, stage, _short in FEWSHOT_VARIANTS:
             st = nn_m.get(stage)
             if isinstance(st, dict):
+                _auto_bind_missing_nnunet_fewshot(st, _nn_key, int(_n))
                 _enrich_nnunet_psma_stage(st)
 
     # --- MAE / MONAI / SegAnyPET ---
@@ -5180,9 +5527,37 @@ def _ingest_fc70_test20_stages(methods: dict) -> None:
         st = (methods.get(mkey) or {}).get(FC70_STAGE_KEY)
         if not isinstance(st, dict):
             continue
+        status0 = (st.get("status") or "").lower()
+        # Never clobber an in-flight fc70 retrain with a stale scored aggregate
+        if status0 in ("running", "waiting"):
+            continue
+        pats = STAGE_RUNTIME_PATTERNS.get((mkey, FC70_STAGE_KEY), ())
+        if pats and _pgrep_any(pats):
+            continue
         fp0, fn0 = _stage_fp_fn(st)
         if _stage_has_score(st) and fp0 is not None and fn0 is not None:
             continue
+        # Auto-bind latest on-disk fc70 aggregate when stamp empty / status pending
+        if mkey in ("nnunet", "nnunet_mim", "hemingduo_scratch", "chenyixin_scratch", "hemingduo", "chenyixin"):
+            stamp = str(st.get("stamp") or "").strip()
+            if stamp.endswith(".log") or stamp.endswith(".txt"):
+                stamp = stamp.rsplit(".", 1)[0]
+                st["stamp"] = stamp
+            if not stamp or not (CTRL / "ICLR2026/vis" / f"aggregate_nnunet_psma_fc70_{stamp}.json").is_file():
+                tag = f"_iclr2026_{mkey}_psma_fc70_"
+                cands = sorted(
+                    (CTRL / "ICLR2026/vis").glob(f"aggregate_nnunet_psma_fc70_*{tag}*.json"),
+                    key=lambda p: p.stat().st_mtime,
+                    reverse=True,
+                )
+                if cands:
+                    name = cands[0].name
+                    # aggregate_nnunet_psma_fc70_{stamp}.json
+                    st["stamp"] = name[len("aggregate_nnunet_psma_fc70_") : -len(".json")]
+            # Allow pending recovery via ingest
+            if (st.get("status") or "").lower() in ("pending", "queued", ""):
+                st["status"] = "done"
+                st["test_invalidated"] = False
         if mkey in ("dpdnet", "dpdnet_dualenc"):
             _ingest_dpdnet_test20_aggregate(st)
         elif mkey in ("seganypet", "seganypet_scratch"):
@@ -5344,6 +5719,18 @@ def _ingest_mean_only_stage(
             st.pop("test_live", None)
             st["note"] = "FDG TEST FAILED · 0/202 · rerun queued"
             return False
+        return False
+    # Reject MultiTalent all-background collapse (Dice≈0) — not a valid board result
+    if method_key in ("chenyixin", "hemingduo") and float(md) <= 1e-4:
+        st["status"] = "pending"
+        st["mean"] = None
+        st["mean_fp"] = None
+        st["mean_fn"] = None
+        st["fp_rate"] = None
+        st["fn_rate"] = None
+        st["fold_dice"] = {}
+        st["stamp"] = ""
+        st["note"] = "rejected MultiTalent all-bg aggregate · await StdTrainVal50 FDG re-eval"
         return False
     st["fold_dice"] = {"0": float(md)}
     st["mean"] = float(md)

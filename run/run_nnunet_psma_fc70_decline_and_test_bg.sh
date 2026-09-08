@@ -4,6 +4,8 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 # shellcheck source=/dev/null
+source "/ICLR2026/run/_aligned_seed_env.sh"
+# shellcheck source=/dev/null
 source "${ROOT}/ICLR2026/run/_psma_fc70_env.sh"
 DATA="${TASK1_BASE:-/media/ybwang/data1/PSMA-DATA}"
 WORK="${WORK_DIR:-${DATA}/task1_train_workspace}"
@@ -15,28 +17,33 @@ read -r TR VAL NTR NVAL < <(_fc70_resolve_iters)
 FDG_STAMP="${TASK1_UDA_FDG_STAMP:-20260817_225543_iclr2026_baseline1_fdg_2ch_fullres_gpu013_bs6_tr70_val0_169ep}"
 FDG_BEST="${TASK1_UDA_FDG_BEST:-/media/ybwang/data1/PSMA-DATA/task1_train_workspace/nnUNet_results/20260817_225543_iclr2026_baseline1_fdg_2ch_fullres_gpu013_bs6_tr70_val0_169ep/Dataset228_AutoPETIV_Task1_2ch/nnUNetTrainer_Task1StdTrainVal50__nnUNetPlans__3d_fullres/fold_0/checkpoint_final.pth}"
 
+BOARD_METHOD="${TASK1_BOARD_METHOD:-nnunet}"
 PARENT="${TASK1_NNUNET_RESULTS_STAMP_NAME:-}"
 if [[ -z "${PARENT}" || "${PARENT}" != *fc70* ]]; then
-  PARENT="$(TZ=Asia/Shanghai date +%Y%m%d_%H%M%S)_iclr2026_nnunet_psma_fc70_1gpu_bs${PSMA_FC70_BS}_tr${TR}_val${VAL}e${PSMA_FC70_VAL_EVERY}_${PSMA_FC70_EP}ep_gpu${PSMA_FC70_GPU}"
+  PARENT="$(TZ=Asia/Shanghai date +%Y%m%d_%H%M%S)_iclr2026_${BOARD_METHOD}_psma_fc70_1gpu_bs${PSMA_FC70_BS}_tr${TR}_val${VAL}e${PSMA_FC70_VAL_EVERY}_${PSMA_FC70_EP}ep_gpu${PSMA_FC70_GPU}"
 fi
 
 PIPE_LOG="${VIS}/nohup_nnunet_psma_fc70_${PARENT}.log"
 exec > >(tee -a "${PIPE_LOG}") 2>&1
 
-echo "[nnunet-fc70] PARENT=${PARENT} n=${NTR}/${NVAL} tr${TR}/val${VAL}e${PSMA_FC70_VAL_EVERY} init=${FDG_BEST}"
+SEED_NOTE=""
+[[ -n "${TASK1_TRAIN_SEED:-}" ]] && SEED_NOTE=" · seed=${TASK1_TRAIN_SEED}"
+echo "[nnunet-fc70] PARENT=${PARENT} method=${BOARD_METHOD} n=${NTR}/${NVAL} tr${TR}/val${VAL}e${PSMA_FC70_VAL_EVERY} init=${FDG_BEST}${SEED_NOTE}"
 
-BOARD_METHOD="${TASK1_BOARD_METHOD:-nnunet}"
 python3 "${ROOT}/ICLR2026/scripts/iclr2026_aligned_fdg_fs50_board.py" \
   --board "${BOARD}" --no-plot \
-  --patch-json "{\"methods\":{\"${BOARD_METHOD}\":{\"${PSMA_FC70_STAGE}\":{\"status\":\"running\",\"stamp\":\"${PARENT}\",\"bs\":${PSMA_FC70_BS},\"train_iters\":${TR},\"val_iters\":${VAL},\"total_epochs\":${PSMA_FC70_EP},\"online_val\":\"VAL${VAL} every${PSMA_FC70_VAL_EVERY}\",\"note\":\"fc70% PSMA · single run · n=${NTR}/${NVAL}\",\"test_invalidated\":true}}},\"updated_note\":\"${BOARD_METHOD} fc70 training\"}" || true
+  --patch-json "{\"methods\":{\"${BOARD_METHOD}\":{\"${PSMA_FC70_STAGE}\":{\"status\":\"running\",\"stamp\":\"${PARENT}\",\"bs\":${PSMA_FC70_BS},\"train_iters\":${TR},\"val_iters\":${VAL},\"total_epochs\":${PSMA_FC70_EP},\"online_val\":\"VAL${VAL} every${PSMA_FC70_VAL_EVERY}\",\"mean\":null,\"mean_fp\":null,\"mean_fn\":null,\"fold_dice\":{},\"note\":\"fc70% PSMA · single run · n=${NTR}/${NVAL}${SEED_NOTE}\",\"test_invalidated\":true}}},\"updated_note\":\"${BOARD_METHOD} fc70 training${SEED_NOTE}\"}" || true
 
 bash "${ROOT}/scripts/task1_crash_monitor_disarm.sh" || true
 
 FOLD_ID="${PSMA_FC70_FOLD}" GPU_ID="${PSMA_FC70_GPU}" PARENT_STAMP="${PARENT}" \
+  TASK1_BOARD_METHOD="${BOARD_METHOD}" \
   TASK1_FEWSHOT_N=70 TASK1_PSMA_BOARD_STAGE="${PSMA_FC70_STAGE}" \
   TASK1_FEWSHOT_SPLIT_DIR="${ROOT}/ICLR2026/data" \
   TASK1_SPLITS_FINAL_JSON="${PSMA_FC70_SPLITS}" \
   TASK1_UDA_FDG_STAMP="${FDG_STAMP}" TASK1_UDA_FDG_BEST="${FDG_BEST}" \
+  TASK1_TRAIN_SEED="${TASK1_TRAIN_SEED:-}" \
+  TASK1_RAM_SHARD_SEED="${TASK1_RAM_SHARD_SEED:-${TASK1_TRAIN_SEED:-}}" \
   TASK1_NUM_EPOCHS="${PSMA_FC70_EP}" \
   TASK1_TRAIN_ITERS_PER_EPOCH="${TR}" \
   TASK1_VAL_ITERS_PER_EPOCH="${VAL}" \
@@ -49,14 +56,22 @@ FOLD_ID="${PSMA_FC70_FOLD}" GPU_ID="${PSMA_FC70_GPU}" PARENT_STAMP="${PARENT}" \
 
 STAMP="${PARENT}_f${PSMA_FC70_FOLD}"
 rm -f "${WORK}/01_train_vis/TASK1_TRAIN_STOP_${STAMP}.txt"
-nohup python3 "${MON}" --method nnunet --parent-stamp "${PARENT}" --fold "${PSMA_FC70_FOLD}" \
+# decline monitor method tag: competition rows share nnUNet-style logs
+DECLINE_METHOD="${BOARD_METHOD}"
+case "${BOARD_METHOD}" in
+  hemingduo_scratch|chenyixin_scratch|hemingduo|chenyixin|nnunet_mim) DECLINE_METHOD=nnunet ;;
+esac
+nohup python3 "${MON}" --method "${DECLINE_METHOD}" --parent-stamp "${PARENT}" --fold "${PSMA_FC70_FOLD}" \
   --base-ep "${PSMA_FC70_BASE_EP}" --val-every "${PSMA_FC70_VAL_EVERY}" \
-  >"${VIS}/nohup_decline_mon_nnunet_fc70.log" 2>&1 &
+  >"${VIS}/nohup_decline_mon_${BOARD_METHOD}_fc70.log" 2>&1 &
 
 FOLD_ID="${PSMA_FC70_FOLD}" GPU_ID="${PSMA_FC70_GPU}" PARENT_STAMP="${PARENT}" \
+  TASK1_BOARD_METHOD="${BOARD_METHOD}" \
   TASK1_FEWSHOT_N=70 TASK1_FEWSHOT_SPLIT_DIR="${ROOT}/ICLR2026/data" \
   TASK1_SPLITS_FINAL_JSON="${PSMA_FC70_SPLITS}" \
   TASK1_UDA_FDG_STAMP="${FDG_STAMP}" TASK1_UDA_FDG_BEST="${FDG_BEST}" \
+  TASK1_TRAIN_SEED="${TASK1_TRAIN_SEED:-}" \
+  TASK1_RAM_SHARD_SEED="${TASK1_RAM_SHARD_SEED:-${TASK1_TRAIN_SEED:-}}" \
   TASK1_NUM_EPOCHS="${PSMA_FC70_MAX_EP}" TASK1_LR_SCHEDULE_NUM_EPOCHS="${PSMA_FC70_BASE_EP}" \
   TASK1_TRAIN_ITERS_PER_EPOCH="${TR}" TASK1_VAL_ITERS_PER_EPOCH="${VAL}" \
   TASK1_FS50_VAL_ITERS="${VAL}" TASK1_VAL_EVERY_N_EPOCHS="${PSMA_FC70_VAL_EVERY}" \

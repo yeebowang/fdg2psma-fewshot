@@ -4,20 +4,22 @@ Code for an **ICLR workshop** study on **FDG → PSMA** PET/CT lesion segmentati
 
 Aligned protocol: shared FDG supervised stage → PSMA `fs50` / `fs10` / `fs5` / `fs0` (+ `fc70%` and FDG TEST).
 
+**Reproducibility:** all random seeds default to **42** (see [SEED.md](SEED.md)).
+
 ## Results (mean TEST metrics)
 
 Each metric cell is three lines — **Dice / FP / FN (%)** — also shown in the column headers. Dice excludes empty-GT cases; FP = FP/Neg, FN = FN/Pos (voxel micro-average). Numeric snapshot: [`assets/board_summary.json`](assets/board_summary.json).
 
 | Method | Pretrained | FDG | PSMA fs50<br>Dice / FP / FN | PSMA fs10<br>Dice / FP / FN | PSMA fs5<br>Dice / FP / FN | PSMA fs0<br>Dice / FP / FN | PSMA fc70%<br>Dice / FP / FN | FDG TEST<br>Dice / FP / FN |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Proto+Retrieval (ECCV'20) | none (retrieval) | N/A | 0.05%<br>4.30%<br>87.26% | 0.05%<br>4.30%<br>87.26% | 0.05%<br>4.30%<br>87.26% | 0.05%<br>4.30%<br>87.26% | 0.23%<br>17.75%<br>35.33% | 0.05%<br>5.75%<br>75.99% |
+| Proto+Retrieval (ECCV'20) | none (retrieval) | N/A | 0.05%<br>4.30%<br>87.26% | 0.05%<br>4.30%<br>87.26% | 0.05%<br>4.30%<br>87.26% | 0.05%<br>4.30%<br>87.26% | 0.23%<br>17.75%<br>35.33% | 0.07%<br>5.58%<br>70.70% |
 | nnUNet MIM (Nat.Methods'21) | PET+CT MIM | DONE<br>169ep | 41.57%<br>0.01%<br>45.74% | 36.94%<br>0.00%<br>70.89% | 32.45%<br>0.00%<br>75.50% | 19.12%<br>0.07%<br>54.50% | 43.96%<br>0.01%<br>42.61% | 61.24%<br>0.00%<br>38.01% |
-| nnUNet (Nat.Methods'21) | scratch | DONE<br>1h06m<br>169ep | 32.19%<br>0.02%<br>40.20% | 31.60%<br>0.01%<br>59.63% | 29.14%<br>0.01%<br>66.77% | 15.44%<br>0.12%<br>56.41% | 32.96%<br>0.02%<br>44.13% | 56.23%<br>0.01%<br>36.75% |
+| nnUNet (Nat.Methods'21) | scratch | DONE<br>1h06m<br>169ep | 41.57%<br>0.01%<br>45.74% | 31.60%<br>0.01%<br>59.63% | 29.14%<br>0.01%<br>66.77% | 15.44%<br>0.12%<br>56.41% | 32.96%<br>0.02%<br>44.13% | 56.23%<br>0.01%<br>36.75% |
 | MONAI SwinViT (CVPR'22) | Tang SSL | DONE<br>4h28m<br>100ep | 44.56%<br>0.05%<br>45.76% | 29.37%<br>0.03%<br>76.19% | 26.12%<br>0.03%<br>78.00% | 15.48%<br>0.33%<br>57.41% | 56.10%<br>0.04%<br>36.12% | 61.00%<br>0.02%<br>37.82% |
 | MONAI SwinViT scratch (CVPR'22) | scratch | DONE<br>4h21m<br>100ep | 46.08%<br>0.05%<br>43.02% | 32.94%<br>0.03%<br>71.17% | 29.18%<br>0.01%<br>78.25% | 11.48%<br>0.73%<br>50.85% | 57.55%<br>0.05%<br>32.48% | 61.02%<br>0.02%<br>34.31% |
 | DpDNet dual-enc (MICCAI'25) | PET+CT dual-enc | DONE<br>169ep | 45.00%<br>0.02%<br>36.76% | 41.41%<br>0.01%<br>55.87% | 36.25%<br>0.01%<br>64.74% | 17.69%<br>0.12%<br>47.97% | 49.19%<br>0.01%<br>33.83% | 63.90%<br>0.00%<br>29.04% |
 | DpDNet (MICCAI'25) | scratch | DONE<br>2h31m<br>169ep | 43.96%<br>0.01%<br>38.89% | 40.75%<br>0.00%<br>74.57% | 41.23%<br>0.00%<br>73.66% | 16.71%<br>0.12%<br>50.23% | 44.03%<br>0.01%<br>39.39% | 61.42%<br>0.00%<br>39.16% |
-| SegAnyPET (ICCV'25) | SegAnyPET-Lesion | DONE<br>6h54m<br>100ep | 15.64%<br>0.00%<br>97.74% | 8.40%<br>0.00%<br>99.67% | 8.02%<br>0.00%<br>99.55% | 25.98%<br>0.01%<br>90.59% | 21.97%<br>0.00%<br>95.38% | 44.68%<br>0.00%<br>72.37% |
+| SegAnyPET (ICCV'25) | SegAnyPET-Lesion | DONE<br>6h54m<br>100ep | 15.64%<br>0.00%<br>97.74% | 8.40%<br>0.00%<br>99.67% | 8.02%<br>0.00%<br>99.55% | 25.98%<br>0.01%<br>90.59% | 21.97%<br>0.00%<br>95.38% | 34.97%<br>0.00%<br>72.37% |
 | SegAnyPET scratch (ICCV'25) | scratch | DONE<br>7h43m<br>100ep | 7.95%<br>0.00%<br>99.24% | 3.67%<br>0.00%<br>99.93% | 3.03%<br>0.00%<br>99.78% | 22.13%<br>0.01%<br>93.34% | 19.16%<br>0.00%<br>97.28% | 35.59%<br>0.00%<br>76.62% |
 | PET/CT MAE (arXiv'26) | PET/CT MAE SSL | DONE<br>4h23m<br>100ep | 53.01%<br>0.06%<br>33.31% | 39.33%<br>0.04%<br>57.04% | 30.61%<br>0.03%<br>75.41% | 15.98%<br>0.60%<br>31.24% | 60.49%<br>0.06%<br>26.23% | 73.20%<br>0.01%<br>20.62% |
 | PET/CT MAE scratch (arXiv'26) | scratch | DONE<br>4h41m<br>100ep | 48.10%<br>0.05%<br>41.34% | 38.23%<br>0.03%<br>63.46% | 31.16%<br>0.03%<br>71.79% | 15.62%<br>0.50%<br>45.44% | 58.08%<br>0.05%<br>32.01% | 66.30%<br>0.02%<br>26.99% |
@@ -33,7 +35,7 @@ python3 scripts/export_readme_board.py \
 
 ## Workshop paper draft
 
-ICLR 2027–style LaTeX draft (anonymous): [`paper/`](paper/) (`main.tex`, mean-metric figure, references).
+ICLR-style LaTeX draft (anonymous): [`paper/`](paper/) (`main.tex`, mean-metric figure, references).
 
 ```bash
 cd paper && pdflatex main.tex && bibtex main && pdflatex main.tex && pdflatex main.tex
@@ -44,15 +46,16 @@ cd paper && pdflatex main.tex && bibtex main && pdflatex main.tex && pdflatex ma
 | Path | Contents |
 |------|----------|
 | `scripts/` | Aligned board, split export, eval / ingest helpers |
-| `run/` | Background launchers for FDG / PSMA few-shot stages |
+| `run/` | Background launchers for FDG / PSMA few-shot stages (`_aligned_seed_env.sh`) |
 | `data/` | Stratified & few-shot split JSONs (no NIfTI) |
 | `3D-MAE-PET-CT/` | PET/CT MAE + downstream code (**no** `runs/` / weight blobs) |
-| `third_party/` | Local mirrors of compared methods (SegAnyPET, DpDNet, …) |
-| `nnunet_ext_trainers/` | Custom nnU-Net trainers used by the aligned protocol |
-| `PROTOCOL.md` | Local experiment notes (paths may refer to an internal workspace) |
+| `third_party/` | SegAnyPET + DpDNet mirrors |
+| `nnunet_ext_trainers/` | `Task1StdTrainVal50` + RAM-shard helpers |
+| `PROTOCOL.md` | Experiment protocol notes |
+| `SEED.md` | Seed=42 policy |
 | `assets/` | Sanitized mean-metric JSON + markdown table |
 
-**Not** published here: raw PET/CT volumes, training caches, checkpoints, or per-fold prediction shards.
+**Not** published: raw PET/CT volumes, training caches, checkpoints, per-fold prediction shards, cascade/competition trainers, or local resume/chain scripts.
 
 ## Data & compute notes
 
@@ -62,4 +65,4 @@ cd paper && pdflatex main.tex && bibtex main && pdflatex main.tex && pdflatex ma
 
 ## License
 
-Apache-2.0 (see [`LICENSE`](LICENSE)), except where `third_party/` components specify otherwise.
+Apache-2.0 (see [LICENSE](LICENSE)), except where `third_party/` components specify otherwise.

@@ -151,6 +151,10 @@ PY
     export TASK1_UDA_NNUNET_RESULTS="${WORK}/nnUNet_results/${stamp}"
     export TASK1_CUDA_VISIBLE_DEVICES="${gpu}"
     export TASK1_UDA_PRED_PER_GPU="${PRED_PER_GPU}"
+    export TRAINER="${TRAINER}"
+    export PLANS_ID="${PLANS_ID}"
+    export CONFIG="${CONFIG}"
+    export STEM="${STEM:-autoPET}"
     bash "${ROOT}/ICLR2026/scripts/psma_uda_predict_train.sh"
     docker run --rm \
       -v "${ROOT}:${ROOT}" -v "${TASK1_BASE}:${TASK1_BASE}" \

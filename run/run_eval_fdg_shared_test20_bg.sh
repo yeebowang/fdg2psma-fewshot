@@ -154,7 +154,12 @@ _eval_nnunet() {
       export TASK1_UDA_NNUNET_RESULTS="$(dirname "$(dirname "$(dirname "$(dirname "${ckpt}")")")")"
       export TASK1_CUDA_VISIBLE_DEVICES="${TASK1_CUDA_VISIBLE_DEVICES:-0,1,3}"
       export TASK1_UDA_PRED_PER_GPU="${TASK1_UDA_PRED_PER_GPU:-3}"
-      echo "[psma-fs0] ${mkey} ckpt=${ckpt}"
+      # Infer trainer/plans from ckpt folder (MultiTalent vs StdTrainVal50)
+      _tf="$(basename "$(dirname "$(dirname "${ckpt}")")")"
+      export TRAINER="${_tf%%__*}"
+      _rest="${_tf#*__}"; export PLANS_ID="${_rest%%__*}"
+      if [[ "${TRAINER}" == *MultiTalent* ]]; then export STEM="${STEM:-autoPET}"; fi
+      echo "[psma-fs0] ${mkey} ckpt=${ckpt} trainer=${TRAINER} plans=${PLANS_ID}"
       bash "${CTRL}/ICLR2026/scripts/psma_uda_predict_train.sh"
     fi
   else
@@ -412,6 +417,7 @@ _run() {
   case "$1" in
     nnunet) _eval_nnunet nnunet ;;
     nnunet_mim) _eval_nnunet nnunet_mim ;;
+    hemingduo_scratch|chenyixin_scratch|hemingduo|chenyixin) _eval_nnunet "$1" ;;
     mae) _eval_mae_family mae mae_swinunetr "2,2,6,2" 1 ;;
     mae_scratch) _eval_mae_family mae_scratch mae_scratch "2,2,6,2" 1 ;;
     monai) _eval_mae_family monai monai_swinvit "2,2,2,2" 0 ;;
